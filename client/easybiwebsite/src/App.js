@@ -1,25 +1,43 @@
-import logo from './logo.svg';
-import './App.css';
+import Homepage from "./pages/Homepage";
+import { BrowserRouter, Route, Routes } from "react-router-dom"; // Correct import
+import { CookiesProvider } from "react-cookie";
+import SignIn from "./pages/SignIn";
+import SignUp from "./pages/SignUp";
+import NotFound from "./pages/NotFound";
+import React, { useState, createContext } from "react";
+import Verify from "./pages/Verify";
+import "../src/pagescss/slideanimation.css";
+import LandingPage from "./pages/LandingPage";
 
 function App() {
+  const [messageInfo, setMessageInfo] = useState();
+  const [coordinateData, setCoordinateData] = useState(); //used by AdContext to pass the data about the ad
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <CoordinateContext.Provider value={{ coordinateData, setCoordinateData }}>
+      <MessageContext.Provider value={{ messageInfo, setMessageInfo }}>
+        <CookiesProvider>
+          <BrowserRouter>
+            <div style={{ fontFamily: "MyFont" }}>
+              <Routes>
+                <Route path="/" exact element={<LandingPage />} />
+                <Route path="/HomePage" exact element={<Homepage />} />
+                <Route path="/SignIn" exact element={<SignIn />} />
+                <Route path="/SignUp" exact element={<SignUp />} />
+                <Route path="/Verify" exact element={<Verify />} />
+                <Route path="*" exact element={<NotFound />} />
+                <Route path="/LandingPage" exact element={<LandingPage />} />
+
+              </Routes>
+            </div>
+          </BrowserRouter>
+        </CookiesProvider>
+      </MessageContext.Provider>
+    </CoordinateContext.Provider>
   );
 }
 
 export default App;
+
+export const MessageContext = createContext();
+export const CoordinateContext = createContext();
