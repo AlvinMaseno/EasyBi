@@ -3,18 +3,10 @@ const connect = require("./connection");
 const UserData = require("./Models/UserDataModel");
 const cors = require("cors");
 const bcrypt = require("bcrypt");
-const multer = require("multer");
-
+const nodemailer = require("nodemailer");
+const Verification = require("./Models/VerificationModel");
 
 require("dotenv").config;
-
-
-// Apply rate limiting middleware
-const limiter = rateLimit({
-  windowMs: 1 * 60 * 1000, // 1 minute
-  max: 500, // 100 requests per minute
-});
-
 
 const transporter = nodemailer.createTransport({
   service: "gmail", // or another email service
@@ -24,25 +16,12 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-const storage = new Storage({
-  keyFilename,
-  projectId,
-});
-
-
-const upload = multer({
-  storage: multer.memoryStorage(),
-  limits: {
-    fileSize: 20 * 1024 * 1024,
-  },
-});
 connect();
 
 // Create a new Express app
 const app = express();
 app.set("trust proxy", 1);
 app.use(express.json());
-app.use(limiter);
 
 app.use((req, res, next) => {
   cors()(req, res, (err) => {
@@ -55,39 +34,6 @@ app.use((req, res, next) => {
   });
 });
 
-
-
-// Define a POST route for uploading data
-app.post("/uploadAdData", (req, res) => {
-  const data = req.body;
-  //Change the Paid to false in case in the frontend it  was set to true
-  if (data.Paid === true) {
-    data.Paid = false;
-  }
-  if (data.CreatedOn == null) {
-    data.DateCreated = new Date();
-  }
-
-  AdData.create(data)
-    .then((data) => {
-      res.send(data);
-    })
-    .catch((error) => {
-      res.send(error);
-    });
-});
-app.put("/uploadAdData", (req, res) => {
-  const data = req.body;
-
-  AdData.updateOne({ _id: data.AdID }, data)
-    .then(() => {
-      res.send({ Proceed: true });
-    })
-    .catch((error) => {
-      console.error(error);
-      res.send({ Proceed: false });
-    });
-});
 
 app.post("/SignUp", async (req, res) => {
   const data = req.body;
@@ -418,8 +364,6 @@ app.post("/SignIn", async (req, res) => {
   }
 });
 
-
-
 app.get("/test", (req, res) => {
   try {
     res.send("Worked");
@@ -429,10 +373,8 @@ app.get("/test", (req, res) => {
   }
 });
 
-
-
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
-   console.log("App listening on port 3000")
+  console.log("App listening on port 3000");
 });
