@@ -114,7 +114,7 @@ const SignUp = () => {
       };
       const expirationDate = new Date();
       expirationDate.setDate(expirationDate.getDate() + 7); // Handle form submission, e.g., send data to the server
-      axios.post("http://localhost:3000/verifyv3", data).then((response) => {
+      axios.post("http://localhost:3000/verify", data).then((response) => {
         const res = response.data;
         if (res.proceed) {
           data.VerificationID = res.verificationID;
