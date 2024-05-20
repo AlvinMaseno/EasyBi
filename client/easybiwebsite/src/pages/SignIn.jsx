@@ -49,7 +49,7 @@ const SignIn = () => {
             { expires: expirationDate }
           );
           alert("Login Successful");
-          navigate("/");
+          navigate("/HomePage");
         } else {
           setErrorMessage(res.message);
           // Handle sign-in error here, show error message or take appropriate action
