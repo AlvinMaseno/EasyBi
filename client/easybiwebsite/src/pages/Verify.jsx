@@ -63,7 +63,7 @@ function Verify() {
               });
               alert("Login Successful");
               //remember to add navigation to the page that called navigate()
-              navigate("/");
+              navigate("/HomePage");
             })
             .catch((error) => {
               console.error(error);

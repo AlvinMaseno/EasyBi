@@ -7,7 +7,11 @@ import VerticalHeader from "../Components/VerticalHeader";
 import Header from "../Components/Header";
 
 function Homepage() {
-  return <></>;
+  return (
+    <>
+      <VerticalHeader page="HomePage" />
+    </>
+  );
 }
 
 export default Homepage;
