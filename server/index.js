@@ -34,7 +34,6 @@ app.use((req, res, next) => {
   });
 });
 
-
 app.post("/createUser", async (req, res) => {
   const data = req.body.verification;
   try {
@@ -203,6 +202,74 @@ app.get("/test", (req, res) => {
     res.status("test", error);
   }
 });
+
+app.get("/resetPassword/:email", async (req, res) => {
+  const { email } = req.params;
+  try {
+    const user = await UserData.findOne({
+      Email: email,
+      Enabled: true,
+    });
+    if (!user) {
+      return res.send({
+        message: `EMAIL NOT FOUND`,
+        proceed: false,
+      });
+    }
+    // Generate a random 5-digit verification code
+    function generateVerificationCode() {
+      return Math.floor(10000 + Math.random() * 90000);
+    }
+    const code = generateVerificationCode();
+    const verificationID = generateVerificationCode();
+    const mailOptions = {
+      from: '"EasyBi" <tom.ndemo.adinfinite@gmail.com>',
+      to: data.Email,
+      subject: "Your verification code",
+      text: `Your OTP for EasyBi is ${code}. Best Regards, EasyBi`,
+    };
+
+    transporter.sendMail(mailOptions, async (error, info) => {
+      if (error) {
+        res.send({
+          message: error.message,
+          proceed: false,
+        });
+        console.error("ERROR SENDING VERIFICATION CODE:", error.message);
+        console.error("ERROR SENDING VERIFICATION CODE");
+      } else {
+        var verificationData = { VerificationID: verificationID, Code: code };
+        await Verification.create(verificationData);
+        res.send({
+          proceed: true,
+          message: "Verification code sent",
+          verificationID: verificationID,
+        });
+      }
+    });
+  } catch (error) {
+    console.log(error);
+    return res.send(error);
+  }
+});
+
+app.put("/resetPassword", async (req, res) => {
+  try {
+    await UserData.updateOne(
+      { _id: req.body.email },
+      { password: req.body.password }
+    );
+    const user = await UserData.findOne({
+      Email: email,
+      Enabled: true,
+    });
+    res.send(user);
+  } catch (error) {
+    res.send("Update failed");
+  }
+});
+
+app.put("/resetPassword", async (req, res) => {});
 
 const PORT = process.env.PORT || 3000;
 
