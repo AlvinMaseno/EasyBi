@@ -1,9 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { NavLink } from "react-router-dom";
 import { useCookies } from "react-cookie";
+import { useNavigate } from "react-router-dom";
+
 
 function VerticalHeader({ page }) {
   const [loggedIn, setLoggedIn] = useState(false);
+  const navigate = useNavigate();
+  const [cookie, removeCookie] = useCookies(["user"]);
   const homeImage = require("../assets/home.png");
   const searchIcon = require("../assets/searchIcon.png");
   const messageIcon = require("../assets/send-mail.png");
@@ -20,7 +24,14 @@ function VerticalHeader({ page }) {
       } else {
         setLoggedIn(false);
       }
-    } 
+    }
+  };
+
+  const logOut = () => {
+    setTimeout(() => {
+      removeCookie("user");
+      navigate("/SignIn");
+    }, 3000);
   };
 
   useEffect(() => {
@@ -28,9 +39,7 @@ function VerticalHeader({ page }) {
   }, []);
 
   return (
-    <div
-      className=" text-white bg-slate-950 flex fixed h-screen pb-10 w-[200px] justify-between flex-col"
-    >
+    <div className=" text-white bg-slate-950 flex fixed h-screen pb-10 w-[200px] justify-between flex-col">
       <div className="flex  justify-between w-full  h-1/2 flex-col">
         <div className="flex h-1/4 items-center pl-3">
           <div className="font-medium text-2xl">Easy</div>
@@ -109,19 +118,24 @@ function VerticalHeader({ page }) {
           </NavLink>
         </div>
       ) : (
-        <NavLink
-          className={
-            page === "ProfilePage"
-              ? " py-2 flex justify-between pr-[60px] pl-2 items-center border-r-2 border-r-black  cursor-pointer"
-              : " py-2 flex justify-between pr-[60px] pl-2 items-center cursor-pointer"
-          }
-          to="/ProfilePage"
-          activeclassname="current"
-          exact="true"
-        >
-          <img alt="" src={profileImage} className="w-7 h-7" />
-          <div className="text-sm cursor-pointer">MY ACCOUNT</div>
-        </NavLink>
+        <div className=" items-center flex flex-col">
+          <NavLink
+            className={
+              page === "ProfilePage"
+                ? " py-2 flex justify-between pr-[60px] pl-2 items-center border-r-2 border-r-black  cursor-pointer"
+                : " py-2 flex w-full justify-between pr-[60px] pl-2 items-center cursor-pointer"
+            }
+            to="/ProfilePage"
+            activeclassname="current"
+            exact="true"
+          >
+            <img alt="" src={profileImage} className="w-7 h-7" />
+            <div className="text-sm cursor-pointer">MY ACCOUNT</div>
+          </NavLink>
+          <div className=" py-2 flex justify-between pr-[60px] pl-2 items-center cursor-pointer">
+            <div onClick={logOut} className="text-sm cursor-pointer">LOG OUT</div>
+          </div>
+        </div>
       )}
     </div>
   );
