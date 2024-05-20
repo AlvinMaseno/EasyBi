@@ -222,9 +222,10 @@ app.get("/resetPassword/:email", async (req, res) => {
     }
     const code = generateVerificationCode();
     const verificationID = generateVerificationCode();
+    console.log(email);
     const mailOptions = {
       from: '"EasyBi" <tom.ndemo.adinfinite@gmail.com>',
-      to: data.Email,
+      to: email,
       subject: "Your verification code",
       text: `Your OTP for EasyBi is ${code}. Best Regards, EasyBi`,
     };
@@ -240,6 +241,7 @@ app.get("/resetPassword/:email", async (req, res) => {
       } else {
         var verificationData = { VerificationID: verificationID, Code: code };
         await Verification.create(verificationData);
+        console.log(true);
         res.send({
           proceed: true,
           message: "Verification code sent",
@@ -254,22 +256,25 @@ app.get("/resetPassword/:email", async (req, res) => {
 });
 
 app.put("/resetPassword", async (req, res) => {
+  const saltRounds = 12; // increase the number of salt rounds
+  const hashedPassword = await bcrypt.hash(req.body.password, saltRounds);
+
   try {
-    await UserData.updateOne(
-      { _id: req.body.email },
-      { password: req.body.password }
+    const result = await UserData.updateOne(
+      { Email: req.body.email },
+      { HashedPassword: hashedPassword }
     );
+    console.log(result)
+
     const user = await UserData.findOne({
-      Email: email,
+      Email:  req.body.email,
       Enabled: true,
     });
-    res.send(user);
+    res.send({ status: "OK", user: user });
   } catch (error) {
-    res.send("Update failed");
+    res.send({ status: "ERROR", message:"failed",error:error  });
   }
 });
-
-app.put("/resetPassword", async (req, res) => {});
 
 const PORT = process.env.PORT || 3000;
 
