@@ -8,6 +8,8 @@ import React, { useState, createContext } from "react";
 import Verify from "./pages/Verify";
 import "../src/pagescss/slideanimation.css";
 import LandingPage from "./pages/LandingPage";
+import ResetPassword from "./pages/ResetPassword";
+import VerifyPassword from "./pages/VerifyPassword";
 
 function App() {
   const [messageInfo, setMessageInfo] = useState();
@@ -27,7 +29,8 @@ function App() {
                 <Route path="/Verify" exact element={<Verify />} />
                 <Route path="*" exact element={<NotFound />} />
                 <Route path="/LandingPage" exact element={<LandingPage />} />
-
+                <Route path="/ResetPassword" exact element={<ResetPassword />} />
+                <Route path="/VerifyPassword" exact element={<VerifyPassword />} />
               </Routes>
             </div>
           </BrowserRouter>
