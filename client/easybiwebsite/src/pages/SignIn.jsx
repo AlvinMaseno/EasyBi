@@ -164,6 +164,12 @@ const SignIn = () => {
           Sign Up
         </Link>
       </div>
+      <div className="flex flex-row justify-center items-center w-full mt-4 ">
+        <div className="text-gray-600 text-sm mr-2">Forgot Password?</div>
+        <Link to="/VerifyPassword" className="text-custom-purple text-sm">
+          Reset
+        </Link>
+      </div>
     </div>
   );
 };
