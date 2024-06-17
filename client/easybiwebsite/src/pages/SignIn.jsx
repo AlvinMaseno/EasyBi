@@ -60,7 +60,10 @@ const SignIn = () => {
         setErrorMessage("A RARE ERROR OCCURRED");
         // Handle other types of errors here
       });
-    setUploading(false);
+    setTimeout(() => {
+      setUploading(false);
+      console.log("uploading");
+    }, 3000);
   };
 
   const override = {

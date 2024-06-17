@@ -10,6 +10,7 @@ import "../src/pagescss/slideanimation.css";
 import LandingPage from "./pages/LandingPage";
 import ResetPassword from "./pages/ResetPassword";
 import VerifyPassword from "./pages/VerifyPassword";
+import ProfileScreen from "./pages/ProfilePage";
 
 function App() {
   const [messageInfo, setMessageInfo] = useState();
@@ -31,6 +32,7 @@ function App() {
                 <Route path="/LandingPage" exact element={<LandingPage />} />
                 <Route path="/ResetPassword" exact element={<ResetPassword />} />
                 <Route path="/VerifyPassword" exact element={<VerifyPassword />} />
+                <Route path="/ProfilePage" exact element={<ProfileScreen />} />
               </Routes>
             </div>
           </BrowserRouter>

@@ -23,7 +23,7 @@ const VerifyPassword = () => {
   };
 
   const sendOTP = async () => {
-    console.log("sent");
+    setUploading(true);
     await axios
       .get(`http://localhost:3000/resetPassword/${email}`)
       .then((response) => {
@@ -33,9 +33,14 @@ const VerifyPassword = () => {
           setErrorMessage(response.data.message);
         }
       });
+    setTimeout(() => {
+      setUploading(false);
+      console.log("uploading");
+    }, 1000);
   };
 
   const handleVerification = async () => {
+    setUploading(true);
     const expirationDate = new Date();
     expirationDate.setDate(expirationDate.getDate() + 7);
     console.log("test");
@@ -51,10 +56,14 @@ const VerifyPassword = () => {
             expires: expirationDate,
           });
           navigate("/ResetPassword");
-        }else{
-          setErrorMessage("INCORRECT OTP")
+        } else {
+          setErrorMessage("INCORRECT OTP");
         }
       });
+    setTimeout(() => {
+      setUploading(false);
+      console.log("uploading");
+    }, 1000);
   };
 
   const override = {
@@ -90,9 +99,15 @@ const VerifyPassword = () => {
           <div className="text-4xl 4xs:text-2xl 2xs:text-2xl font-semibold mt-24 4xs:mt-10">
             Forgot Password
           </div>
-          <div className="text-gray-500 text-xs text-center  m-4">
-            Enter the email and confirm using verification code
-          </div>
+          {!verificationID ? (
+            <div className="text-gray-500 text-xs text-center  m-4">
+              Enter the email and confirm using verification code
+            </div>
+          ) : (
+            <div className=" text-sm text-center  m-4">
+              An OTP code has been sent to the email
+            </div>
+          )}
         </div>
       </div>
       {errorMessage ? (

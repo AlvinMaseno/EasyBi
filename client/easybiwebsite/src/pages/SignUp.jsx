@@ -94,6 +94,7 @@ const SignUp = () => {
       contactValid &&
       uploading === false
     ) {
+      
       const removeTrailingWhitespace = (str) => {
         let i = str.length - 1;
 

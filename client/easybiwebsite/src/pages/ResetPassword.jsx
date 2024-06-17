@@ -65,8 +65,13 @@ const ResetPassword = () => {
       await axios
         .put("http://localhost:3000/resetPassword", data)
         .then((response) => {
-          console.log(response.data)
-          setUserCookie("user", response.data.user, {
+          setUserCookie("user",{
+            Email: response.data.user.Email,
+            Name: response.data.user.Name,
+            UserID: response.data.user._id,
+            UserImageUrl: response.data.user.UserImageUrl,
+            UserName: response.data.user.UserName,
+          }, {
             expires: expirationDate,
           });
           navigate("/HomePage");
@@ -74,7 +79,7 @@ const ResetPassword = () => {
     } else {
       setTimeout(() => {
         setUploading(false);
-      }, 3000);
+      }, 1000);
       setErrorMessage("PLEASE FILL IN ALL THE FIELDS CORRECTLY");
     }
   };
