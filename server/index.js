@@ -288,6 +288,44 @@ app.get("/verifyCode/:verificationID/:trialCode", async (req, res) => {
 });
 
 
+app.post("/uploadAdImages", upload.array("images", 10), async (req, res) => {
+  if (req.files) {
+    try {
+      const urls = [];
+      const files = req.files;
+
+      for (const file of files) {
+        const filename = `AdPic/${uuidv4()}.jpg`;
+        const blob = bucket.file(filename);
+        const stream = blob.createWriteStream({
+          resumable: false,
+          contentType: file.mimetype,
+        });
+
+        stream.on("error", (err) => {
+          console.error(err);
+        });
+
+        stream.on("finish", async () => {
+          const url = `https://storage.googleapis.com/adinfinite/${filename}`;
+          urls.push(url);
+
+          if (urls.length === files.length) {
+            res.send(urls);
+          }
+        });
+
+        stream.end(file.buffer);
+      }
+    } catch (error) {
+      console.error(error);
+      res.send({ message: "Internal server error" });
+    }
+  } else {
+    res.send("No Images");
+  }
+});
+
 // Define a POST route for uploading data
 app.post("/uploadAdData", (req, res) => {
   const data = req.body;
