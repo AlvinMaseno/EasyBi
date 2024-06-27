@@ -295,6 +295,41 @@ app.get("/verifyCode/:verificationID/:trialCode", async (req, res) => {
   }
 });
 
+
+// Define a POST route for uploading data
+app.post("/uploadAdData", (req, res) => {
+  const data = req.body;
+  //Change the Paid to false in case in the frontend it  was set to true
+  if (data.Paid === true) {
+    data.Paid = false;
+  }
+  if (data.CreatedOn == null) {
+    data.DateCreated = new Date();
+  }
+
+  AdData.create(data)
+    .then((data) => {
+      res.send(data);
+    })
+    .catch((error) => {
+      res.send(error);
+    });
+});
+
+app.put("/uploadAdData", (req, res) => {
+  const data = req.body;
+
+  AdData.updateOne({ _id: data.AdID }, data)
+    .then(() => {
+      res.send({ Proceed: true });
+    })
+    .catch((error) => {
+      console.error(error);
+      res.send({ Proceed: false });
+    });
+});
+
+
 app.get("/HomeScreen/:number", async (req, res) => {
   const number = parseInt(req.params.number);
   try {
