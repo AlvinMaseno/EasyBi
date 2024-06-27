@@ -149,15 +149,7 @@ app.delete("/deleteUserImage", async (req, res) => {
   }
 });
 
-app.delete("/deleteAd", async (req, res) => {
-  const ID = req.query.id;
-  try {
-    const results = await AdData.deleteOne({ _id: ID });
-    res.send(results);
-  } catch (error) {
-    console.error(error);
-  }
-});
+
 
 app.delete("/deleteAdReports", async (req, res) => {
   const ID = req.query.id;
@@ -327,6 +319,71 @@ app.put("/uploadAdData", (req, res) => {
       console.error(error);
       res.send({ Proceed: false });
     });
+});
+
+
+app.delete("/deleteAdImages", express.json(), async (req, res) => {
+  if (req.body.urls) {
+    try {
+      const urls = req.body.urls;
+      const deletePromises = urls.map((imageUrl) => {
+        const index = imageUrl.indexOf("/AdPic/");
+        const imageName = imageUrl.substring(index + 1);
+
+        // Then use the `imageName` variable in the `delete` method like this
+        return storage.bucket("adinfinite").file(imageName).delete();
+      });
+
+      await Promise.all(deletePromises);
+
+      res.send({ message: "Images deleted successfully" });
+    } catch (error) {
+      res.send({ message: "Internal server error" });
+    }
+  } else {
+    res.send("No Image");
+  }
+});
+
+app.delete("/deleteAdReviews", async (req, res) => {
+  const ID = req.query.id;
+  try {
+    const results = await ReportReviewData.Review.deleteMany({ AdID: ID });
+    res.send(results);
+  } catch (error) {
+    console.error(error);
+  }
+});
+
+
+app.delete("/deleteAdReviews", async (req, res) => {
+  const ID = req.query.id;
+  try {
+    const results = await ReportReviewData.Review.deleteMany({ AdID: ID });
+    res.send(results);
+  } catch (error) {
+    console.error(error);
+  }
+});
+
+app.delete("/deleteAdReports", async (req, res) => {
+  const ID = req.query.id;
+  try {
+    const results = await ReportReviewData.Report.deleteMany({ AdID: ID });
+    res.send(results);
+  } catch (error) {
+    console.error(error);
+  }
+});
+
+app.delete("/deleteAd", async (req, res) => {
+  const ID = req.query.id;
+  try {
+    const results = await AdData.deleteOne({ _id: ID });
+    res.send(results);
+  } catch (error) {
+    console.error(error);
+  }
 });
 
 
@@ -699,6 +756,20 @@ app.post("/uploadUserImage", upload.single("image"), async (req, res) => {
   } catch (error) {
     console.error(error);
     res.send({ error: "Internal server error" });
+  }
+});
+
+
+app.get("/checkExisting/:Name", async (req, res) => {
+  const name = req.params.Name;
+  try {
+    const result = await AdData.findOne({ Name: new RegExp(`^${name}$`, "i") });
+    if (result) {
+      return res.send({ proceed: false, Message: "Business Name exists" });
+    }
+    res.send({ proceed: true, Message: "Business Name is free to use" });
+  } catch (error) {
+    console.error(error);
   }
 });
 
