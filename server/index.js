@@ -295,6 +295,211 @@ app.get("/verifyCode/:verificationID/:trialCode", async (req, res) => {
   }
 });
 
+app.get("/HomeScreen/:number", async (req, res) => {
+  const number = parseInt(req.params.number);
+  try {
+    const results = await AdData.aggregate([
+      { $match: { Paid: true } },
+      { $sample: { size: number } },
+    ]);
+    res.send(results);
+  } catch (error) {
+    res.send(error);
+  }
+});
+
+
+
+// Define the API endpoint for searching items
+app.post("/searchv2", async (req, res) => {
+  //"Without Location"
+  const searchValue = req.body.SearchValue;
+  let limit = 10;
+  const sourceCoordinates = {
+    latitude: parseFloat(req.body.Coordinates?.latitude),
+    longitude: parseFloat(req.body.Coordinates?.longitude),
+  };
+  console.log(req.body);
+  if (req.body.number) {
+    limit = req.body.number;
+  }
+console.log(sourceCoordinates)
+  try {
+    if (req.body.SearchValue.length > 3) {
+      await UserSearchData.create(req.body);
+    }
+  } catch (error) {
+    console.error(error);
+  }
+
+  try {
+    // Find name matches
+    const nameMatches = await AdData.find({
+      Name: { $regex: searchValue, $options: "i" },
+    }).limit(limit);
+    if (sourceCoordinates) {
+      nameMatches.forEach((item) => {
+        if (item.Coordinates.Set) {
+          const coords = item.Coordinates.coordinates;
+          item.Distance = haversineDistance(sourceCoordinates, coords);
+        } else {
+          item.Distance = 9999999;
+        }
+      });
+
+      nameMatches.sort((a, b) => {
+        return a.Distance - b.Distance;
+      });
+    }
+
+    // Extract the _id values of nameMatches
+    const seenIdsFromNames = nameMatches.map((item) => item._id);
+
+    let remainingLimit = limit - nameMatches.length;
+    let keywordMatches = [];
+    let locationMatches = [];
+
+    // Check if there are still results needed
+    if (remainingLimit > 0) {
+      // Find keyword matches and exclude _id values seen in previous nameMatches
+      keywordMatches = await AdData.find({
+        Name: { $not: { $regex: searchValue, $options: "i" } },
+        KeyWords: { $regex: searchValue, $options: "i" },
+        _id: { $nin: seenIdsFromNames },
+      }).limit(remainingLimit);
+      if (sourceCoordinates) {
+        keywordMatches.forEach((item) => {
+          if (item.Coordinates.Set) {
+            const coords = item.Coordinates.coordinates;
+            item.Distance = haversineDistance(sourceCoordinates, coords);
+          } else {
+            item.Distance = 9999999;
+          }
+        });
+
+        keywordMatches.sort((a, b) => {
+          return a.Distance - b.Distance;
+        });
+      }
+
+      // Extract the _id values of keywordMatches
+      const seenIdsFromKeywords = keywordMatches.map((item) => item._id);
+
+      remainingLimit -= keywordMatches.length;
+
+      // Check if there are still results needed
+      if (remainingLimit > 0) {
+        // Find location matches and exclude _id values seen in previous nameMatches and keywordMatches
+        locationMatches = await AdData.find({
+          Name: { $not: { $regex: searchValue, $options: "i" } },
+          KeyWords: { $not: { $regex: searchValue, $options: "i" } },
+          Location: { $regex: searchValue, $options: "i" },
+          _id: { $nin: [...seenIdsFromNames, ...seenIdsFromKeywords] },
+        }).limit(remainingLimit);
+      }
+    }
+
+    // Combine and sort the results (names first, then keywords, then locations)
+    const allMatches = [...nameMatches, ...keywordMatches, ...locationMatches];
+
+    res.send(allMatches);
+  } catch (error) {
+    console.error("Error searching items:", error);
+    res.send({ error: "An error occurred while searching items" });
+  }
+});
+
+function haversineDistance(coord1, coord2) {
+  const R = 6371;
+  const dLat = (coord2.latitude - coord1.latitude) * (Math.PI / 180);
+  const dLon = (coord2.longitude - coord1.longitude) * (Math.PI / 180);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((coord1.latitude * Math.PI) / 180) *
+      Math.cos((coord2.latitude * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const d = R * c;
+  return d;
+}
+
+
+// Define the API endpoint for searching items
+app.post("/searchPage", async (req, res) => {
+  //"Without Location"
+
+  const searchValue = req.body.SearchValue;
+  const page = req.body.Page;
+  let limit = 10;
+  console.log(req.body, "Next");
+  try {
+    if (req.body.SearchValue.length > 3) {
+      await UserSearchData.create(req.body);
+    }
+  } catch (error) {
+    console.error(error);
+  }
+
+  if (req.body.number) {
+    limit = req.body.number;
+  }
+
+  try {
+    // Find name matches
+    const nameMatches = await AdData.find({
+      Name: { $regex: searchValue, $options: "i" },
+    })
+      .limit(limit)
+      .skip(page * 10);
+
+    // Extract the _id values of nameMatches
+    const seenIdsFromNames = nameMatches.map((item) => item._id);
+
+    let remainingLimit = limit - nameMatches.length;
+    let keywordMatches = [];
+    let locationMatches = [];
+
+    // Check if there are still results needed
+    if (remainingLimit > 0) {
+      // Find keyword matches and exclude _id values seen in previous nameMatches
+      keywordMatches = await AdData.find({
+        Name: { $not: { $regex: searchValue, $options: "i" } },
+        KeyWords: { $regex: searchValue, $options: "i" },
+        _id: { $nin: seenIdsFromNames },
+      })
+        .limit(remainingLimit)
+        .skip(page * 10);
+
+      // Extract the _id values of keywordMatches
+      const seenIdsFromKeywords = keywordMatches.map((item) => item._id);
+
+      remainingLimit -= keywordMatches.length;
+
+      // Check if there are still results needed
+      if (remainingLimit > 0) {
+        // Find location matches and exclude _id values seen in previous nameMatches and keywordMatches
+        locationMatches = await AdData.find({
+          Name: { $not: { $regex: searchValue, $options: "i" } },
+          KeyWords: { $not: { $regex: searchValue, $options: "i" } },
+          Location: { $regex: searchValue, $options: "i" },
+          _id: { $nin: [...seenIdsFromNames, ...seenIdsFromKeywords] },
+        })
+          .limit(remainingLimit)
+          .skip(page * 10);
+      }
+    }
+
+    // Combine and sort the results (names first, then keywords, then locations)
+    const allMatches = [...nameMatches, ...keywordMatches, ...locationMatches];
+
+    res.send(allMatches);
+  } catch (error) {
+    console.error("Error searching items:", error);
+    res.send({ error: "An error occurred while searching items" });
+  }
+});
+
 app.post("/SignIn", async (req, res) => {
   const { Email, Password } = req.body;
   try {
