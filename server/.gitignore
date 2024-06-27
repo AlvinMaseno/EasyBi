@@ -15,7 +15,7 @@ yarn-error.log*
 .DS_Store
 
 # Google Cloud Service Account Credentials
-server/adinfinite-e53e2556555e.json
+adinfinite-e53e2556555e.json
 
 # Other sensitive files
 *.pem
