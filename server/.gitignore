@@ -1,0 +1,24 @@
+# Node.js
+node_modules/
+npm-debug.log*
+
+# Logs
+logs/
+*.log
+yarn-debug.log*
+yarn-error.log*
+
+# Environment variables
+.env
+
+# MacOS
+.DS_Store
+
+# Google Cloud Service Account Credentials
+server/adinfinite-e53e2556555e.json
+
+# Other sensitive files
+*.pem
+*.key
+*.crt
+*.env
