@@ -39,10 +39,6 @@ function AdScreen() {
   const [expandImage, setExpandImage] = useState([false, null]);
   const [adOwnerName, setAdOwnerName] = useState();
   const [reviewerName, setReviewerName] = useState();
-  const [uploading, setUploading] = useState(false);
-  const [reportMenu, setReportMenu] = useState(false);
-  const [userlocation, setUserLocation] = useState(null);
-  const [coordinates, setCoordinates] = useState([]);
  
   const isBlank = /^\s*$|^\s{2,}/;
   const { id } = useParams();
