@@ -39,7 +39,15 @@ function AdScreen() {
   const [expandImage, setExpandImage] = useState([false, null]);
   const [adOwnerName, setAdOwnerName] = useState();
   const [reviewerName, setReviewerName] = useState();
- 
+  const [uploading, setUploading] = useState(false);
+  const [reportMenu, setReportMenu] = useState(false);
+  const [userlocation, setUserLocation] = useState(null);
+  const [coordinates, setCoordinates] = useState([]);
+  const [reportBanner, setReportBanner] = useState(false);
+  const [reportText, setReportText] = useState("");
+  const [largeScreen, setLargeScreen] = useState(false);
+  const [getStartedMenu, setGetStartedMenu] = useState(false);
+  const [geoPermissionRejected, setGeoPermissionRejected] = useState(false);
   const isBlank = /^\s*$|^\s{2,}/;
   const { id } = useParams();
   const [cookies] = useCookies(["user"]);
@@ -348,7 +356,288 @@ function AdScreen() {
 
   return (
     <div>
+      {reportMenu === true ? (
+        <div className="z-30 h-screen w-full absolute">
+          <div
+            onClick={() => {
+              setReportMenu(false);
+              document.body.style.overflow = "visible";
+            }}
+            className="absoulte bg-black flex flex-row-reverse sm:pr-10"
+          >
+            <IoClose size={40} className="opacity-70" color="white" />
+          </div>
+          <div className="absolute flex bg-black z-10 w-full h-screen opacity-80 items-center justify-center "></div>
+          <div className="flex justify-center items-center absolute z-20 w-full h-screen">
+            <div className="bg-white w-[90%] lg:w-[600px] h-[400px] rounded lg:p-5 p-3">
+              <div className="flex justify-center">
+                <div className="text-xl">Report</div>
+              </div>
+              <div className="flex justify-center my-2 lg:my-5">
+                <div className="text-xs text-center">
+                  Make a report and this advertisement will be flagged
+                </div>
+              </div>
+              <div className="flex justify-center my-5">
+                <div className="relative w-full flex justify-center items-center ">
+                  <textarea
+                    placeholder="Add a Report"
+                    onChange={(e) => {
+                      setReportText(e.target.value);
+                    }}
+                    value={reportText}
+                    className="border-[1.5px] max-h-20 lg:w-3/4 w-5/6 my-2 p-5 focus:outline-none placeholder:text-xs text-xs pr-16"
+                  />
+                  <div
+                    className=" inline-block absolute top-1/3 left-[77%] "
+                    onClick={() => {
+                      handleSendReport();
+                    }}
+                  >
+                    <div className="text-blue-400  absolute cursor-pointer">
+                      SEND
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div
+                className="flex justify-center "
+                onClick={() => {
+                  setReportText("Inapproriate content");
+                }}
+              >
+                <div className="flex w-5/6  py-3 items-center border-b-[1px] cursor-pointer">
+                  <div className="mr-5">
+                    <MdOutlineCancel color="grey" />
+                  </div>
+                  <div className="text-gray-700 lg:text-sm text-xs font-light hover:font-semibold">
+                    Inapproriate content
+                  </div>
+                </div>
+              </div>
+              <div
+                className="flex justify-center "
+                onClick={() => {
+                  setReportText(
+                    "This business advert provides false information"
+                  );
+                }}
+              >
+                <div className="flex w-5/6  py-3 items-center border-b-[1px] cursor-pointer">
+                  <div className="mr-5">
+                    <MdOutlineCancel color="grey" />
+                  </div>
+                  <div className="text-gray-700 lg:text-sm text-xs font-light hover:font-semibold">
+                    This business advert provides false information
+                  </div>
+                </div>
+              </div>
+              <div
+                className="flex justify-center "
+                onClick={() => {
+                  setReportText("This business doesn't belong to this person");
+                }}
+              >
+                <div className="flex w-5/6  py-3 items-center border-b-[1px] cursor-pointer">
+                  <div className="mr-5">
+                    <MdOutlineCancel color="grey" />
+                  </div>
+                  <div className="text-gray-700 lg:text-sm text-xs font-light hover:font-semibold">
+                    This business doesn't belong to this person
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div></div>
+      )}
+      {uploading === true ? (
+        <div className="z-30 h-screen w-full absolute">
+          <div className="fixed  flex bg-black z-10 w-[200%] h-[500%] opacity-10 items-center justify-center "></div>
+          <div className="flex justify-center items-center absolute z-20 w-full h-screen">
+            <ClipLoader
+              color="white"
+              cssOverride={override}
+              size={60}
+              data-testid="loader"
+            />
+          </div>
+        </div>
+      ) : (
+        <div></div>
+      )}
+      {expandImage[0] === true ? (
+        <div className="z-30 h-screen w-full absolute">
+          <div
+            onClick={() => {
+              setExpandImage([false, ""]);
+              document.body.style.overflow = "visible";
+            }}
+            className="absoulte z-40 bg-black flex flex-row-reverse sm:pr-10"
+          >
+            <IoClose size={40} className="opacity-70" color="white" />
+          </div>
+          <div className="absolute flex bg-black z-10 w-full h-screen opacity-80 items-center justify-center "></div>
+          <div>
+            <div className="flex justify-center">
+              <img alt=""
+                src={expandImage[1]}
+                className="lg:w-[300px] object-cover lg:h-4/5 3xs:w-[320px] 4xs:w-[280px] 4xs:h-[70%] rounded absolute z-20 md:mt-[20px] 4xs:mt-[70px]"
+              />
+            </div>
+            <div className="md:mt-[200px] xs:mt-[35%] 2xs:mt-[40%] mt-[70%] absolute h-10 w-full z-50  flex justify-center">
+              <div className="w-[450px] flex justify-between items-center">
+                <div
+                  onClick={() => {
+                    photoGallery("left", expandImage[1]);
+                  }}
+                >
+                  <IoChevronBackCircleSharp
+                    size={40}
+                    className=" opacity-70"
+                    color="white"
+                  />
+                </div>
+                <div
+                  onClick={() => {
+                    photoGallery("right", expandImage[1]);
+                  }}
+                >
+                  <IoChevronForwardCircleSharp
+                    size={40}
+                    className=" opacity-70"
+                    color="white"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div></div>
+      )}
 
+      {getStartedMenu === true ? (
+        <div className="z-30 h-screen w-full absolute">
+          <div
+            onClick={() => {
+              setGetStartedMenu(false);
+              document.body.style.overflow = "visible";
+            }}
+            className="absoulte z-40 bg-black flex flex-row-reverse sm:pr-10"
+          >
+            <IoClose size={40} className="opacity-70" color="white" />
+          </div>
+          <div className="absolute flex bg-black z-10 w-full h-screen opacity-80 items-center justify-center "></div>
+          <div className="flex justify-center items-center absolute z-20 w-full h-screen">
+            <div className="bg-white w-[600px] 4xs:w-[330px] 2xs:w-[400px] h-[200px] 4xs:h-[160px] rounded p-5 2xs:p-2 xs:p-3 4xs:p-2">
+              <div
+                className="flex flex-row-reverse cursor-pointer"
+                onClick={() => {
+                  setGetStartedMenu(false);
+                  document.body.style.overflow = "visible";
+                }}
+              >
+                <IoClose size={20} className="opacity-70" color="gray" />
+              </div>
+              <div className="flex justify-center">
+                <div className="text-xl 2xs:text-sm 4xs:text-sm">Log In</div>
+              </div>
+              <div className="flex justify-center my-5 4xs:my-3 2xs:my-3">
+                <div className="text-xs">
+                  Log in to continue with this action
+                  {reviewerID}
+                </div>
+              </div>
+              <div className="w-full flex items-center justify-center">
+                <div className="flex justify-between w-2/3 4xs:w-11/12 my-5 4xs:my-1">
+                  <div
+                    onClick={() => {
+                      setGetStartedMenu(false);
+                      document.body.style.overflow = "visible";
+                    }}
+                    className="cursor-pointer px-7 py-2 4xs:py-[7px] rounded-3xl "
+                  >
+                    <div className="text-sm text-red-500 font-semibold">
+                      Cancel
+                    </div>
+                  </div>
+                  <div
+                    onClick={() => {
+                      navigate("/SignUp");
+                      document.body.style.overflow = "visible";
+                    }}
+                    className="bg-fuchsia-900 cursor-pointer px-7 py-2 4xs:py-[7px] flex items-center justify-center rounded-3xl border-black"
+                  >
+                    <div className="text-white text-sm">Continue</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div></div>
+      )}
+      {geoPermissionRejected === true ? (
+        <div className="z-30 h-screen w-full absolute">
+          <div
+            onClick={() => {
+              setGeoPermissionRejected(false);
+              document.body.style.overflow = "visible";
+            }}
+            className="absoulte z-40 bg-black flex flex-row-reverse sm:pr-10"
+          >
+            <IoClose size={40} className="opacity-70" color="white" />
+          </div>
+          <div className="absolute flex bg-black z-10 w-full h-screen opacity-80 items-center justify-center "></div>
+          <div className="flex justify-center items-center absolute z-20 w-full h-screen">
+            <div className="bg-white md:w-[60%] 2xs:h-[60%] 3xs:h-[40%] 4xs:h-[58%] w-[95%] rounded p-5 2xs:p-2 xs:p-3 4xs:p-2">
+              <div
+                className="flex flex-row-reverse cursor-pointer"
+                onClick={() => {
+                  setGeoPermissionRejected(false);
+                  document.body.style.overflow = "visible";
+                }}
+              >
+                <IoClose size={20} className="opacity-70" color="gray" />
+              </div>
+              <div className="flex justify-center">
+                <div className="text-xl 2xs:text-sm 4xs:text-sm">
+                  GeoLocation permission was rejected
+                </div>
+              </div>
+              <div className="flex justify-center my-5 4xs:my-3 2xs:my-3">
+                <div className="text-xs text-gray-600">
+                  You need to allow permissions for geo location to see the
+                  location of the advert
+                </div>
+              </div>
+              <div className="flex items-center justify-center">
+                <img alt=""
+                  src={screenshotGeoLocationImage}
+                  className="w-[300px] h-[200px] object-cover"
+                />
+              </div>
+              <div className="w-full flex items-center justify-center mt-4">
+                <div
+                  onClick={() => {
+                    setGeoPermissionRejected(false);
+                    document.body.style.overflow = "visible";
+                  }}
+                  className="border-[1px] cursor-pointer  hover:scale-105 transition-transform duration-400 px-5 py-2 4xs:py-[7px] rounded-xl border-black"
+                >
+                  <div className="text-sm font-semibold">Okay</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div></div>
+      )}
       <div className={largeScreen ? "flex relative" : "relative"}>
         {largeScreen ? (
           <div className="z-20">
