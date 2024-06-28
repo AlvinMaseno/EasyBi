@@ -102,6 +102,19 @@ app.get("/getUser/:id", async (req, res) => {
   }
 });
 
+app.post("/Review", async (req, res) => {
+  const data = req.body;
+  const ReviewData = ReportReviewData.Review;
+  const newReviewData = new ReviewData(data);
+  newReviewData
+    .save()
+    .then(() => {
+      res.send("Review sent");
+    })
+    .catch((err) => {
+      res.send("Review failed to send");
+    });
+});
 
 app.delete("/deleteAdReviews", async (req, res) => {
   const ID = req.query.id;
@@ -110,6 +123,17 @@ app.delete("/deleteAdReviews", async (req, res) => {
     res.send(results);
   } catch (error) {
     console.error(error);
+  }
+});
+
+app.get("/getAdData/:ID", async (req, res) => {
+  const ID = req.params.ID;
+  try {
+    const result = await AdData.findOne({ _id: ID });
+    res.send(result);
+  } catch (error) {
+    console.error(error);
+    res.send(error);
   }
 });
 
@@ -149,7 +173,15 @@ app.delete("/deleteUserImage", async (req, res) => {
   }
 });
 
-
+app.delete("/deleteAd", async (req, res) => {
+  const ID = req.query.id;
+  try {
+    const results = await AdData.deleteOne({ _id: ID });
+    res.send(results);
+  } catch (error) {
+    console.error(error);
+  }
+});
 
 app.delete("/deleteAdReports", async (req, res) => {
   const ID = req.query.id;
@@ -288,44 +320,6 @@ app.get("/verifyCode/:verificationID/:trialCode", async (req, res) => {
 });
 
 
-app.post("/uploadAdImages", upload.array("images", 10), async (req, res) => {
-  if (req.files) {
-    try {
-      const urls = [];
-      const files = req.files;
-
-      for (const file of files) {
-        const filename = `AdPic/${uuidv4()}.jpg`;
-        const blob = bucket.file(filename);
-        const stream = blob.createWriteStream({
-          resumable: false,
-          contentType: file.mimetype,
-        });
-
-        stream.on("error", (err) => {
-          console.error(err);
-        });
-
-        stream.on("finish", async () => {
-          const url = `https://storage.googleapis.com/adinfinite/${filename}`;
-          urls.push(url);
-
-          if (urls.length === files.length) {
-            res.send(urls);
-          }
-        });
-
-        stream.end(file.buffer);
-      }
-    } catch (error) {
-      console.error(error);
-      res.send({ message: "Internal server error" });
-    }
-  } else {
-    res.send("No Images");
-  }
-});
-
 // Define a POST route for uploading data
 app.post("/uploadAdData", (req, res) => {
   const data = req.body;
@@ -346,6 +340,33 @@ app.post("/uploadAdData", (req, res) => {
     });
 });
 
+app.post("/Report", async (req, res) => {
+  const data = req.body;
+  const ReportData = ReportReviewData.Report;
+  const newReportData = new ReportData(data);
+  newReportData
+    .save()
+    .then(() => {
+      res.send("Report sent");
+    })
+    .catch((error) => {
+      console.error("Report failed to send");
+    });
+});
+
+app.get("/Review/:adId", async (req, res) => {
+  const ID = req.params.adId; // use "adId" instead of "adID"
+  try {
+    const results = await ReportReviewData.Review.aggregate([
+      { $match: { AdID: ID } },
+      { $sample: { size: 5 } },
+    ]);
+    res.send(results);
+  } catch (error) {
+    res.send(error);
+  }
+});
+
 app.put("/uploadAdData", (req, res) => {
   const data = req.body;
 
@@ -357,71 +378,6 @@ app.put("/uploadAdData", (req, res) => {
       console.error(error);
       res.send({ Proceed: false });
     });
-});
-
-
-app.delete("/deleteAdImages", express.json(), async (req, res) => {
-  if (req.body.urls) {
-    try {
-      const urls = req.body.urls;
-      const deletePromises = urls.map((imageUrl) => {
-        const index = imageUrl.indexOf("/AdPic/");
-        const imageName = imageUrl.substring(index + 1);
-
-        // Then use the `imageName` variable in the `delete` method like this
-        return storage.bucket("adinfinite").file(imageName).delete();
-      });
-
-      await Promise.all(deletePromises);
-
-      res.send({ message: "Images deleted successfully" });
-    } catch (error) {
-      res.send({ message: "Internal server error" });
-    }
-  } else {
-    res.send("No Image");
-  }
-});
-
-app.delete("/deleteAdReviews", async (req, res) => {
-  const ID = req.query.id;
-  try {
-    const results = await ReportReviewData.Review.deleteMany({ AdID: ID });
-    res.send(results);
-  } catch (error) {
-    console.error(error);
-  }
-});
-
-
-app.delete("/deleteAdReviews", async (req, res) => {
-  const ID = req.query.id;
-  try {
-    const results = await ReportReviewData.Review.deleteMany({ AdID: ID });
-    res.send(results);
-  } catch (error) {
-    console.error(error);
-  }
-});
-
-app.delete("/deleteAdReports", async (req, res) => {
-  const ID = req.query.id;
-  try {
-    const results = await ReportReviewData.Report.deleteMany({ AdID: ID });
-    res.send(results);
-  } catch (error) {
-    console.error(error);
-  }
-});
-
-app.delete("/deleteAd", async (req, res) => {
-  const ID = req.query.id;
-  try {
-    const results = await AdData.deleteOne({ _id: ID });
-    res.send(results);
-  } catch (error) {
-    console.error(error);
-  }
 });
 
 
@@ -794,20 +750,6 @@ app.post("/uploadUserImage", upload.single("image"), async (req, res) => {
   } catch (error) {
     console.error(error);
     res.send({ error: "Internal server error" });
-  }
-});
-
-
-app.get("/checkExisting/:Name", async (req, res) => {
-  const name = req.params.Name;
-  try {
-    const result = await AdData.findOne({ Name: new RegExp(`^${name}$`, "i") });
-    if (result) {
-      return res.send({ proceed: false, Message: "Business Name exists" });
-    }
-    res.send({ proceed: true, Message: "Business Name is free to use" });
-  } catch (error) {
-    console.error(error);
   }
 });
 
