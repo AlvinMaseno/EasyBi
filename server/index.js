@@ -826,8 +826,102 @@ app.put("/resetPassword", async (req, res) => {
   }
 });
 
+app.get("/getMessages/:userID/:AdIDs/:number", async (req, res) => {
+  try {
+    const userID = req.params.userID;
+    const AdIDs = req.params.AdIDs.split(","); // Split the AdIDs at the comma to create an array
+    const number = parseInt(req.params.number);
+
+    const copyOfAdIDs = [...AdIDs, userID];
+
+    const resultsArr = [];
+    await Promise.all(
+      copyOfAdIDs.map(async (item) => {
+        const results = await Chat.aggregate([
+          {
+            $match: {
+              $or: [{ InquirerID: item }, { InquireeID: item }],
+            },
+          },
+          {
+            $sort: {
+              LastModified: -1, // Sort chats in descending order of LastModified
+            },
+          },
+          {
+            $limit: number, // Limit the result to 10 chats
+          },
+          {
+            $project: {
+              Messages: 0, // Exclude the Messages field from the output
+            },
+          },
+        ]);
+        if (results.length !== 0) {
+          resultsArr.push(results);
+        }
+      })
+    );
+    res.send(resultsArr);
+  } catch (error) {
+    console.error("Error retrieving messages:", error);
+    res.send("An error occurred while retrieving messages.");
+  }
+});
+
+app.get("/getChat/:inquirerID/:inquireeID/:number", async (req, res) => {
+  const inquirerID = req.params.inquirerID;
+  const inquireeID = req.params.inquireeID;
+  const number = parseInt(req.params.number) * -1; //convert limit to negative value
+
+  try {
+    const results = await Chat.aggregate([
+      {
+        $match: {
+          $or: [
+            { InquirerID: inquirerID, InquireeID: inquireeID },
+            { InquirerID: inquireeID, InquireeID: inquirerID },
+          ],
+        },
+      },
+      {
+        $unwind: "$Messages",
+      },
+      {
+        $sort: {
+          "Messages.dateSent": -1, // Sort messages in descending order of dateSent
+        },
+      },
+      {
+        $group: {
+          _id: "$_id",
+          Messages: { $push: "$Messages" }, // Collect all the messages
+        },
+      },
+      {
+        $project: {
+          Messages: { $slice: ["$Messages", number] }, // Limit to 10 messages
+        },
+      },
+    ]);
+    res.send(results[0]);
+    // Assuming there's only one document in the results array
+  } catch (error) {
+    res.send(error);
+    console.error(error);
+  }
+});
+
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
   console.log("App listening on port 3000");
 });
+
+
+
+
+
+
+
+
