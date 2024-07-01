@@ -912,16 +912,59 @@ app.get("/getChat/:inquirerID/:inquireeID/:number", async (req, res) => {
   }
 });
 
+// Route handler to create a new chat
+app.post("/createChat", async (req, res) => {
+  const chatData = req.body;
+  try {
+    const newChat = new Chat({
+      Messages: [
+        {
+          Message: chatData.message,
+          DateSent: chatData.dateSent,
+          SenderID: chatData.senderID,
+        },
+      ],
+      LastModified: chatData.dateSent,
+      InquirerID: chatData.inquirer,
+      InquireeID: chatData.inquiree,
+    });
+
+    const savedChat = await newChat.save();
+    res.send(savedChat);
+  } catch (error) {
+    console.error(error);
+    res.send({ error: "Internal server error" });
+  }
+});
+
+// Route handler to update an existing chat
+app.put("/updateChats", async (req, res) => {
+  const chatData = req.body;
+  try {
+    const chat = await Chat.findById(chatData.chatID);
+
+    if (!chat) {
+      return res.send({ error: "Chat not found" });
+    }
+
+    chat.Messages.push({
+      Message: chatData.message,
+      DateSent: chatData.dateSent,
+      SenderID: chatData.senderID,
+    });
+
+    chat.LastModified = chatData.dateSent; // Update LastModified field
+
+    const updatedChat = await chat.save();
+    res.send(updatedChat);
+  } catch (error) {
+    console.error(error);
+    res.send({ error: "Internal server error" });
+  }
+});
+
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
   console.log("App listening on port 3000");
 });
-
-
-
-
-
-
-
-
