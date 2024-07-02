@@ -1,9 +1,13 @@
 
 # EasyBi: Online Classified Platform designed for connecting Service Providers with Potential Clients
-[Introduction](#introduction) | [Installation](#installation) |  [Usage](#usage) | [Features](#features) | [Dependencies](#dependencies) | [Project Structure](#project-structure)
+[Introduction](#introduction) | [Requirements](#requirements) | [Installation](#installation) |  [Usage](#usage) | [Features](#features)  | [Project Structure](#project-structure)
 ## Introduction
 
 EasyBi aims to enhance access to services by enabling users to search indiscriminately online and seamlessly connect with businesses across various domains.EasyBi facilitates communication and transactions between users and service providers, enhancing the overall user experience. This project signifies a significant advancement in the accessibility and inclusivity of online services, addressing the needs of a diverse user base. The results have the potential to revolutionize how individuals access and interact with services in the digital era, fostering greater connectivity and convenience in everyday life.
+## Requirements
+
+- Ensure you have Node.js installed on your local machine.
+- [Node.js](https://nodejs.org/) (Download and install from the official website)
 
 ## Installation
 
@@ -82,9 +86,7 @@ Use the platform's communication tools to reach out to service providers directl
 - Seamless communication between users and service providers.
 - User-friendly interface for easy navigation and service discovery.
 
-## Dependencies
 
-- Node.js
   
 ## Project Structure
 
