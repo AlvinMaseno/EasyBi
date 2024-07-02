@@ -535,7 +535,132 @@ function Messages() {
           ) : (
             <></>
           )}
+ {largeScreen || chatSelected ? (
+            <div className="border-l w-full h-screen">
+              {!chatSelected ? (
+                <>
+                  <div className="w-full h-screen flex flex-col items-center justify-center ">
+                    <div>
+                      <img alt="" src={chatgif} className="w-40 h-40" />
+                    </div>
+                    <div className="mt-4">
+                      <div>Your messages</div>
+                    </div>
+                    <div className="mt-2 text-gray-700 text-sm">
+                      <div>Send messages to business or clients here</div>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div
+                  style={{ background: "#f3f3f3" }}
+                  className="flex-col flex h-screen flex-1 relative"
+                >
+                  <div className="flex  justify-between items-center pt-3 pb-2 bg-slate-900">
+                    <div className="flex">
+                      <div
+                        className="flex items-center ml-2.5"
+                        onClick={() => {
+                          setChatSelected(undefined);
+                        }}
+                      >
+                        <IoIosArrowBack
+                          color="white"
+                          size={24}
+                          className="mr-2"
+                        />
+                      </div>
+                      <div
+                        className={
+                          name ? "slide-in-x text-white text-xl ml-1" : ""
+                        }
+                      >
+                        {name}
+                      </div>
+                    </div>
 
+                    <div className="mr-1">
+                      <img
+                        alt=""
+                        src={imageUrl}
+                        className="w-[40px] object-cover h-[40px] rounded-[20px]"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex mt-1 w-full">
+                    <div
+                      onClick={() => {
+                        refreshChat(messageInfo);
+                      }}
+                      className="bg-gray-500 hover:bg-gray-600 cursor-pointer rounded-[7px] absolute left-1/3  shadow-xl px-4 py-1 flex items-center justify-center"
+                    >
+                      <div className="text-xs text-white">
+                        See earlier messages
+                      </div>
+                    </div>
+                  </div>
+                  <div
+                    className=" overflow-y-scroll flex-1"
+                    style={{ background: "f3f3f3" }}
+                  >
+                    <div ref={section2}></div>
+                    {messagesReceived.map((item, index) => (
+                      <div
+                        key={index}
+                        className={
+                          item.SenderID === userID
+                            ? "w-[300px] slide-in-y-down p-1 pb-4 z-2 m-5 border bg-white shadow-md mt-4 border-l-4 border-l-black rounded"
+                            : "w-[300px] slide-in-y-down p-1 pb-4 z-2 m-5 border bg-white shadow-md mt-4 border-l-4 border-l-pink-300 rounded"
+                        }
+                      >
+                        <div className="flex justify-between mb-1">
+                          {item.SenderID === userID ? (
+                            <div className="text-green-400 font-semibold text-xs">
+                              You
+                            </div>
+                          ) : (
+                            <div className="font-semibold text-sm">{name}</div>
+                          )}
+                          <div className="text-gray-400 font-semilight text-xs">
+                            {moment(item.DateSent).format("DD/MM/YYYY")}
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-gray-400 font-semilight text-xs">
+                            {item.Message}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    <div ref={section1} className=""></div>
+                  </div>
+                  <div
+                    style={{ backgroundColor: "#f3f3f3" }}
+                    className="h-32 lg:h-20"
+                  >
+                    <div className="shadow-md bottom-20 lg:bottom-4 absolute border rounded-2xl p-2 w-[90%] xs:w-[90%] flex items-center bg-white  border-fuchsia-800 mx-4">
+                      <textarea
+                        placeholder="Send Message"
+                        className="flex-1 flex pl-5 focus:outline-none text-sm overflow-y-scroll"
+                        onSubmit={handleSendMessage}
+                        onChange={(e) => {
+                          setMessage(e.target.value);
+                        }}
+                        value={message}
+                      />
+                      <div onClick={handleSendMessage}>
+                        <div className="text-fuchsia-800  font-bold ml-10 cursor-pointer ">
+                          Send
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <></>
+          )}
           
         </div>
       )}
