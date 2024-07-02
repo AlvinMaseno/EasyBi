@@ -315,8 +315,129 @@ function Messages() {
     }
   }, [activeFunction, section2]);
 
+  //create a new chat stream
+  const createChat = async () => {
+    const msg = message; //store the message then clear the text field
+    setMessage("");
+    let date = new Date();
+    const chatData = {
+      inquirer: userID,
+      inquiree: messageInfo.resultsData._id,
+      message: msg,
+      dateSent: date,
+      senderID: userID,
+    };
+    try {
+      await axios.post(`http://localhost:3000/createChat`, chatData);
+      // Handle success response
+      getChat(messageInfo);
+    } catch (error) {
+      // Handle error
+      console.error(error);
+    }
 
+    //then push the notification
+    try {
+      //set the push data as message for message screen
+      const pushData = {
+        screenName: "Message",
+      };
+      const pushDataString = JSON.stringify(pushData); //push data is required to be in this format
+      await axios
+        .post(`https://app.nativenotify.com/api/indie/notification`, {
+          subID: messageInfo.resultsData.UserID,
+          appId: 10437,
+          appToken: "FzmHvT0D2PK6KqwCRjqufP",
+          title: "You received a message",
+          message: msg,
+          pushData: pushDataString,
+        })
+        .catch((error) => {
+          console.error(error);
+        });
+    } catch (error) {
+      console.error("I emmitted the error");
+    }
+  };
 
+  //update chat stream
+  const updateChat = async () => {
+    const msg = message; //store message before clearing the text input
+    setMessage("");
+    const date = new Date();
+    const chatData = {
+      chatID: chatID,
+      message: msg,
+      dateSent: date,
+      senderID: userID,
+    };
+    try {
+      await axios.put(`http://localhost:3000/updateChats`, chatData);
+      // Handle success response
+      getChat(messageInfo);
+
+      if (messageInfo[0]) {
+        //check if sending to customer by checking if messageInfo[0] then send notification
+        try {
+          const pushData = {
+            screenName: "Message",
+          };
+          const pushDataString = JSON.stringify(pushData);
+          await axios
+            .post(`https://app.nativenotify.com/api/indie/notification`, {
+              subID: `${messageInfo[0].InquirerID}`,
+              appId: 10437,
+              appToken: "FzmHvT0D2PK6KqwCRjqufP",
+              title: "You received a message",
+              message: msg,
+              pushData: pushDataString,
+            })
+            .catch((error) => {
+              console.error(error);
+            });
+        } catch (error) {
+          console.error(error);
+        }
+      } else {
+        //else send to business
+
+        try {
+          const pushData = {
+            screenName: "Message",
+          };
+
+          const pushDataString = JSON.stringify(pushData);
+          await axios
+            .post(`https://app.nativenotify.com/api/indie/notification`, {
+              subID: messageInfo.resultsData.UserID,
+              appId: 10437,
+              appToken: "FzmHvT0D2PK6KqwCRjqufP",
+              title: "You received a message",
+              message: msg,
+              pushData: pushDataString,
+            })
+            .catch((error) => {
+              console.error(error);
+            });
+        } catch (error) {
+          console.error("I emmitted the error");
+        }
+      }
+    } catch (error) {
+      // Handle error
+      console.error(error);
+    }
+  };
+
+  //check if chatID exists indicating a chat already exists hence no need to create a new one
+  const handleSendMessage = () => {
+    if (chatID) {
+      updateChat();
+    } else {
+      createChat();
+      setMessage(""); //clear the text input
+    }
+  };
 
   useEffect(() => {
     getMessages();
@@ -535,7 +656,8 @@ function Messages() {
           ) : (
             <></>
           )}
- {largeScreen || chatSelected ? (
+
+          {largeScreen || chatSelected ? (
             <div className="border-l w-full h-screen">
               {!chatSelected ? (
                 <>
@@ -661,7 +783,6 @@ function Messages() {
           ) : (
             <></>
           )}
-          
         </div>
       )}
       {largeScreen ? (

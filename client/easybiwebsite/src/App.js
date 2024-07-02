@@ -6,9 +6,16 @@ import SignIn from "./pages/SignIn";
 import CreateAd from "./pages/CreateAd";
 import SignUp from "./pages/SignUp";
 import NotFound from "./pages/NotFound";
+import AdScreen from "./pages/AdScreen";
+import Messages from "./pages/Messages";
 import React, { useState, createContext } from "react";
 import ProfilePage from "./pages/ProfilePage";
 import Verify from "./pages/Verify";
+import VerifyPassword from "./pages/VerifyPassword";
+import ResetPassword from "./pages/ResetPassword"
+import Boost from "./pages/Boost";
+
+
 import "../src/pagescss/slideanimation.css";
 import LandingPage from "./pages/LandingPage";
 
@@ -31,6 +38,11 @@ function App() {
                 <Route path="*" exact element={<NotFound />} />
                 <Route path="/ProfilePage" exact element={<ProfilePage />} />
                 <Route path="/LandingPage" exact element={<LandingPage />} />
+                <Route path="/AdScreen/:id" exact element={<AdScreen />} />
+                <Route path="/Messages" exact element={<Messages />} />
+                <Route path="/VerifyPassword" exact element={<VerifyPassword />} />
+                <Route path="/ResetPassword" exact element={<ResetPassword />} />
+                <Route path="/Boost" exact element={<Boost />} />
               </Routes>
             </div>
           </BrowserRouter>

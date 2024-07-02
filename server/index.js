@@ -12,7 +12,8 @@ const { v4: uuidv4 } = require("uuid");
 const keyFilename = "adinfinite-e53e2556555e.json";
 const AdData = require("./Models/AdDataModel");
 const ReportReviewData = require("./Models/ReviewReportModel");
-
+const Chat = require("./Models/Chat");
+const { default: axios } = require("axios");
 
 require("dotenv").config;
 
@@ -367,6 +368,76 @@ app.get("/Review/:adId", async (req, res) => {
   }
 });
 
+app.post("/uploadAdImages", upload.array("images", 10), async (req, res) => {
+  if (req.files) {
+    try {
+      const urls = [];
+      const files = req.files;
+
+      for (const file of files) {
+        const filename = `AdPic/${uuidv4()}.jpg`;
+        const blob = bucket.file(filename);
+        const stream = blob.createWriteStream({
+          resumable: false,
+          contentType: file.mimetype,
+        });
+
+        stream.on("error", (err) => {
+          console.error(err);
+        });
+
+        stream.on("finish", async () => {
+          const url = `https://storage.googleapis.com/adinfinite/${filename}`;
+          urls.push(url);
+
+          if (urls.length === files.length) {
+            res.send(urls);
+          }
+        });
+
+        stream.end(file.buffer);
+      }
+    } catch (error) {
+      console.error(error);
+      res.send({ message: "Internal server error" });
+    }
+  } else {
+    res.send("No Images");
+  }
+});
+
+// Define a POST route for uploading data
+app.post("/uploadAdData", (req, res) => {
+  const data = req.body;
+  //Change the Paid to false in case in the frontend it  was set to true
+  if (data.Paid === true) {
+    data.Paid = false;
+  }
+  if (data.CreatedOn == null) {
+    data.DateCreated = new Date();
+  }
+
+  AdData.create(data)
+    .then((data) => {
+      res.send(data);
+    })
+    .catch((error) => {
+      res.send(error);
+    });
+});
+app.put("/uploadAdData", (req, res) => {
+  const data = req.body;
+
+  AdData.updateOne({ _id: data.AdID }, data)
+    .then(() => {
+      res.send({ Proceed: true });
+    })
+    .catch((error) => {
+      console.error(error);
+      res.send({ Proceed: false });
+    });
+});
+
 app.put("/uploadAdData", (req, res) => {
   const data = req.body;
 
@@ -394,7 +465,65 @@ app.get("/HomeScreen/:number", async (req, res) => {
   }
 });
 
+// Define the API endpoint for searching items
+app.get("/search/:searchValue/:number", async (req, res) => {
+  //"Without Location"
 
+  const searchValue = req.params.searchValue;
+  let limit = 10;
+
+  if (req.params.number) {
+    limit = req.params.number;
+  }
+
+  try {
+    // Find name matches
+    const nameMatches = await AdData.find({
+      Name: { $regex: searchValue, $options: "i" },
+    }).limit(limit);
+
+    // Extract the _id values of nameMatches
+    const seenIdsFromNames = nameMatches.map((item) => item._id);
+
+    let remainingLimit = limit - nameMatches.length;
+    let keywordMatches = [];
+    let locationMatches = [];
+
+    // Check if there are still results needed
+    if (remainingLimit > 0) {
+      // Find keyword matches and exclude _id values seen in previous nameMatches
+      keywordMatches = await AdData.find({
+        Name: { $not: { $regex: searchValue, $options: "i" } },
+        KeyWords: { $regex: searchValue, $options: "i" },
+        _id: { $nin: seenIdsFromNames },
+      }).limit(remainingLimit);
+
+      // Extract the _id values of keywordMatches
+      const seenIdsFromKeywords = keywordMatches.map((item) => item._id);
+
+      remainingLimit -= keywordMatches.length;
+
+      // Check if there are still results needed
+      if (remainingLimit > 0) {
+        // Find location matches and exclude _id values seen in previous nameMatches and keywordMatches
+        locationMatches = await AdData.find({
+          Name: { $not: { $regex: searchValue, $options: "i" } },
+          KeyWords: { $not: { $regex: searchValue, $options: "i" } },
+          Location: { $regex: searchValue, $options: "i" },
+          _id: { $nin: [...seenIdsFromNames, ...seenIdsFromKeywords] },
+        }).limit(remainingLimit);
+      }
+    }
+
+    // Combine and sort the results (names first, then keywords, then locations)
+    const allMatches = [...nameMatches, ...keywordMatches, ...locationMatches];
+
+    res.send(allMatches);
+  } catch (error) {
+    console.error("Error searching items:", error);
+    res.send({ error: "An error occurred while searching items" });
+  }
+});
 
 // Define the API endpoint for searching items
 app.post("/searchv2", async (req, res) => {
@@ -408,14 +537,6 @@ app.post("/searchv2", async (req, res) => {
   console.log(req.body);
   if (req.body.number) {
     limit = req.body.number;
-  }
-console.log(sourceCoordinates)
-  try {
-    if (req.body.SearchValue.length > 3) {
-      await UserSearchData.create(req.body);
-    }
-  } catch (error) {
-    console.error(error);
   }
 
   try {
@@ -517,15 +638,7 @@ app.post("/searchPage", async (req, res) => {
 
   const searchValue = req.body.SearchValue;
   const page = req.body.Page;
-  let limit = 10;
-  console.log(req.body, "Next");
-  try {
-    if (req.body.SearchValue.length > 3) {
-      await UserSearchData.create(req.body);
-    }
-  } catch (error) {
-    console.error(error);
-  }
+  let limit = 10;  
 
   if (req.body.number) {
     limit = req.body.number;
@@ -962,6 +1075,160 @@ app.put("/updateChats", async (req, res) => {
     res.send({ error: "Internal server error" });
   }
 });
+
+const USERNAME = "MjiCGYO_NkzvqS1YtYgqBR_m2EAa";
+const PASSWORD = "ELv8KZbBGfZCI96V1C4qFjQUmx4a";
+
+const encodedCredentials = Buffer.from(`${USERNAME}:${PASSWORD}`).toString(
+  "base64"
+);
+
+function stkPush(token, phoneNumber, amount, adID, adName, userID, userName) {
+  let data = {
+    phoneNumber: `254${phoneNumber}`,
+    amount: `${amount}`,
+    invoiceNumber: "7527165#001",
+    sharedShortCode: true,
+    orgShortCode: "",
+    orgPassKey: "",
+    callbackUrl: `http://192.168.100.97/getPayment/${phoneNumber}/${adID}/${adName}/${userID}/${userName}`,
+    transactionDescription: `AdInfinite subscription to ${adName}`,
+  };
+
+  let config = {
+    method: "post",
+    maxBodyLength: Infinity,
+    url: "https://api.buni.kcbgroup.com/mm/api/request/1.0.0/stkpush",
+    headers: {
+      accept: "application/json",
+      routeCode: "207",
+      operation: "STKPush",
+      messageId: "232323_KCBOrg_8875661561",
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    data: JSON.stringify(data),
+  };
+
+  axios.request(config).catch((error) => {
+    console.error(error);
+  });
+}
+
+// Move token retrieval logic into a function
+function getToken(callback) {
+  let config = {
+    method: "post",
+    maxBodyLength: Infinity,
+    url: "https://api.buni.kcbgroup.com/token?grant_type=client_credentials",
+    headers: {
+      Authorization: `Basic ${encodedCredentials}`,
+    },
+  };
+
+  axios
+    .request(config)
+    .then((response) => {
+      const token = response.data.access_token;
+      callback(token); // Pass the token to the callback function
+    })
+    .catch((error) => {
+      console.error("Token retrieval error:", error);
+    });
+}
+
+app.post("/stk", (req, res) => {
+  const phoneNumber = req.body.PhoneNumber;
+  const amount = req.body.Amount;
+  const adID = req.body.AdID;
+  const adName = req.body.AdName;
+  const userID = req.body.UserID;
+  const userName = req.body.UserName;
+
+  getToken((token) => {
+    stkPush(token, phoneNumber, amount, adID, adName, userID, userName);
+console.log("successful")
+    res.send("Payment request initiated");
+  });
+});
+
+app.post(
+  "/getPayment/:phoneNumber/:adID/:adName/:userID/:userName",
+  async (req, res) => {
+    const adID = req.params.adID;
+    const adName = req.params.adName;
+    const userID = req.params.userID;
+    const userName = req.params.userName;
+    const phoneNumber = req.params.phoneNumber;
+
+    const result = req.body;
+    const resultCode = result.Body.stkCallback.ResultCode;
+    const resultDesc = result.Body.stkCallback.ResultDesc;
+
+    if (
+      resultCode === 0 &&
+      resultDesc === "The service request is processed successfully."
+    ) {
+      const callbackMetadata = result.Body.stkCallback.CallbackMetadata.Item;
+      const amountItem = callbackMetadata.find(
+        (item) => item.Name === "Amount"
+      );
+      const transactionDate = callbackMetadata.find(
+        (item) => item.Name === "TransactionDate"
+      );
+      const mpesaReceiptNumber = callbackMetadata.find(
+        (item) => item.Name === "MpesaReceiptNumber"
+      );
+      const paidAmount = parseFloat(amountItem.Value);
+
+      let plan, expiryDate;
+
+      if (paidAmount === 2000.0) {
+        plan = "Monthly";
+        expiryDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+      } else if (paidAmount === 700.0) {
+        plan = "Weekly";
+        expiryDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+      }
+      const updatedAdData = {
+        Paid: true,
+        Plan: plan,
+        ExpiryDate: expiryDate,
+      };
+
+      const subsData = {
+        AdID: adID,
+        UserID: userID,
+        UserName: userName,
+        AdName: adName,
+        TransactionDate: transactionDate.Value.toString(),
+        MpesaReceiptNumber: mpesaReceiptNumber.Value,
+        PhoneNumber: `254${phoneNumber}`,
+        Amount: paidAmount.toString(),
+        Plan: plan,
+      };
+      AdSubscriptions.create(subsData)
+        .then((res) => {})
+        .catch((error) => {
+          console.error("Fail", error);
+        });
+
+      try {
+        await AdData.updateOne({ _id: adID }, updatedAdData);
+        console.log({ Proceed: true });
+        res.send({ Proceed: true });
+      } catch (error) {
+        console.error("getPayment", error);
+        res.send({ Proceed: false });
+      }
+    } else {
+      console.error(
+        `Payment not successful. Result Code: ${resultCode}, Result Desc: ${resultDesc}`
+      );
+      res.send({ Proceed: false });
+    }
+  }
+);
 
 const PORT = process.env.PORT || 3000;
 
