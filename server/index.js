@@ -354,6 +354,14 @@ app.post("/Report", async (req, res) => {
     });
 });
 
+app.delete("/deleteReview", async (req, res) => {
+  const ID = req.query.id;
+  try {
+    const results = await ReportReviewData.Review.deleteOne({ _id: ID });
+    res.send(results);
+  } catch (error) {}
+});
+
 app.get("/Review/:adId", async (req, res) => {
   const ID = req.params.adId; // use "adId" instead of "adID"
   try {
