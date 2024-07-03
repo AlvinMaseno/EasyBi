@@ -1100,7 +1100,7 @@ function stkPush(token, phoneNumber, amount, adID, adName, userID, userName) {
     orgShortCode: "",
     orgPassKey: "",
     callbackUrl: `http://192.168.100.97/getPayment/${phoneNumber}/${adID}/${adName}/${userID}/${userName}`,
-    transactionDescription: `AdInfinite subscription to ${adName}`,
+    transactionDescription: `EasyBi subscription to ${adName}`,
   };
 
   let config = {
