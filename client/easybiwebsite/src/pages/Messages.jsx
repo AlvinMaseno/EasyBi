@@ -601,15 +601,7 @@ function Messages() {
                         key={item.resultsData._id}
                         className="bg-white slide-in-y py-3 pl-3 border-b cursor-pointer flex"
                       >
-                        <img
-                          alt=""
-                          src={
-                            item.resultsData.ImageUrl
-                              ? item.resultsData.ImageUrl[0]
-                              : item.resultsData.UserImageUrl
-                          }
-                          className="object-cover h-[40px] w-[40px] rounded-[20px]"
-                        />
+                       
 
                         <div className="m-[5px]">
                           <div className="text-xs text-fuchsia-800 ">
@@ -702,11 +694,7 @@ function Messages() {
                     </div>
 
                     <div className="mr-1">
-                      <img
-                        alt=""
-                        src={imageUrl}
-                        className="w-[40px] object-cover h-[40px] rounded-[20px]"
-                      />
+                     
                     </div>
                   </div>
                   <div className="flex mt-1 w-full">

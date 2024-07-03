@@ -41,7 +41,7 @@ const Boost = () => {
     };
     //send stk push
     axios
-      .post(`https://www.adinfinite.co.ke/stk`, data)
+      .post(`http://loalhost:3000/stk`, data)
       .then(() => {
         document.body.style.overflow = "visible";
         navigate("/HomePage");
@@ -232,8 +232,7 @@ const Boost = () => {
             </div>
           </div>
           <div className="flex lg:mt-20 mt-5 pb-20 flex-col items-center text-gray-500 text-sm">
-            <div>Contact AdInfinite: +254758525285</div>
-            <div>Email AdInfinite: tom.ndemo.adinfinite@gmail.com</div>
+            <div>Contact EasyBi: +254758525285</div>
           </div>
         </div>
         {largeScreen ? (
