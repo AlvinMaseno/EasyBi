@@ -138,7 +138,6 @@ app.get("/getAdData/:ID", async (req, res) => {
   }
 });
 
-
 app.delete("/deleteChats", async (req, res) => {
   const ID = req.query.id;
   try {
@@ -160,7 +159,6 @@ app.delete("/deleteUser", async (req, res) => {
     console.error(error);
   }
 });
-
 
 app.delete("/deleteUserImage", async (req, res) => {
   try {
@@ -193,7 +191,6 @@ app.delete("/deleteAdReports", async (req, res) => {
     console.error(error);
   }
 });
-
 
 app.delete("/deleteAdImages", express.json(), async (req, res) => {
   if (req.body.urls) {
@@ -231,7 +228,6 @@ app.get("/getPersonalAdData/:userID", async (req, res) => {
     res.send(error);
   }
 });
-
 
 app.post("/verify", async (req, res) => {
   const data = req.body;
@@ -319,7 +315,6 @@ app.get("/verifyCode/:verificationID/:trialCode", async (req, res) => {
     console.error(error);
   }
 });
-
 
 // Define a POST route for uploading data
 app.post("/uploadAdData", (req, res) => {
@@ -458,7 +453,6 @@ app.put("/uploadAdData", (req, res) => {
       res.send({ Proceed: false });
     });
 });
-
 
 app.get("/HomeScreen/:number", async (req, res) => {
   const number = parseInt(req.params.number);
@@ -639,14 +633,13 @@ function haversineDistance(coord1, coord2) {
   return d;
 }
 
-
 // Define the API endpoint for searching items
 app.post("/searchPage", async (req, res) => {
   //"Without Location"
 
   const searchValue = req.body.SearchValue;
   const page = req.body.Page;
-  let limit = 10;  
+  let limit = 10;
 
   if (req.body.number) {
     limit = req.body.number;
@@ -935,15 +928,15 @@ app.put("/resetPassword", async (req, res) => {
       { Email: req.body.email },
       { HashedPassword: hashedPassword }
     );
-    console.log(result)
+    console.log(result);
 
     const user = await UserData.findOne({
-      Email:  req.body.email,
+      Email: req.body.email,
       Enabled: true,
     });
     res.send({ status: "OK", user: user });
   } catch (error) {
-    res.send({ status: "ERROR", message:"failed",error:error  });
+    res.send({ status: "ERROR", message: "failed", error: error });
   }
 });
 
@@ -1084,159 +1077,99 @@ app.put("/updateChats", async (req, res) => {
   }
 });
 
-const USERNAME = "MjiCGYO_NkzvqS1YtYgqBR_m2EAa";
-const PASSWORD = "ELv8KZbBGfZCI96V1C4qFjQUmx4a";
+app.post("/stk", (req, res) => {
+  const body = req.body;
+  const consumer_key = "jRxXIxCyke1AuauGIl6LuUDiZME6cgcMDdJNt3emPCuJBnMy";
+  const consumer_secret =
+    "ulBOwP6aeWmT8FLxfSKGbVAKZKbikSMG7uMmNLUzK1ttR434YkaUPDeEdGsoBGw0";
 
-const encodedCredentials = Buffer.from(`${USERNAME}:${PASSWORD}`).toString(
-  "base64"
-);
+  const encodedCredentials = Buffer.from(
+    `${consumer_key}:${consumer_secret}`
+  ).toString("base64");
 
-function stkPush(token, phoneNumber, amount, adID, adName, userID, userName) {
-  let data = {
-    phoneNumber: `254${phoneNumber}`,
-    amount: `${amount}`,
-    invoiceNumber: "7527165#001",
-    sharedShortCode: true,
-    orgShortCode: "",
-    orgPassKey: "",
-    callbackUrl: `http://192.168.100.97/getPayment/${phoneNumber}/${adID}/${adName}/${userID}/${userName}`,
-    transactionDescription: `EasyBi subscription to ${adName}`,
-  };
-
-  let config = {
-    method: "post",
-    maxBodyLength: Infinity,
-    url: "https://api.buni.kcbgroup.com/mm/api/request/1.0.0/stkpush",
-    headers: {
-      accept: "application/json",
-      routeCode: "207",
-      operation: "STKPush",
-      messageId: "232323_KCBOrg_8875661561",
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    data: JSON.stringify(data),
-  };
-
-  axios.request(config).catch((error) => {
-    console.error(error);
-  });
-}
-
-// Move token retrieval logic into a function
-function getToken(callback) {
-  let config = {
-    method: "post",
-    maxBodyLength: Infinity,
-    url: "https://api.buni.kcbgroup.com/token?grant_type=client_credentials",
-    headers: {
-      Authorization: `Basic ${encodedCredentials}`,
-    },
-  };
+  let access_token;
 
   axios
-    .request(config)
+    .get(
+      "https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials",
+      {
+        headers: {
+          Authorization: `Basic ${encodedCredentials}`,
+        },
+      }
+    )
     .then((response) => {
-      const token = response.data.access_token;
-      callback(token); // Pass the token to the callback function
+      access_token = response.data.access_token;
+      console.log(access_token);
+      console.log(body);
+      const data = {
+        BusinessShortCode: 174379,
+        Password: 'MTc0Mzc5YmZiMjc5ZjlhYTliZGJjZjE1OGU5N2RkNzFhNDY3Y2QyZTBjODkzMDU5YjEwZjc4ZTZiNzJhZGExZWQyYzkxOTIwMjQwNzAzMjA1MzMx',
+        Timestamp: '20240703205331',
+        TransactionType: 'CustomerPayBillOnline',
+        Amount: 1,
+        PartyA: `254${body.PhoneNumber}`,
+        PartyB: 174379,
+        PhoneNumber: `254${body.PhoneNumber}`,
+        CallBackURL: `https://www.adinfinite.co.ke/payment/${encodeURIComponent(body.PhoneNumber)}/${encodeURIComponent(body.AdID)}/${encodeURIComponent(body.AdName)}/${encodeURIComponent(body.UserID)}/${encodeURIComponent(body.UserName)}`,
+        AccountReference: 'EasyBi',
+        TransactionDesc: 'Payment of X'
+      };
+      console.log(data);
+
+      return axios.post(
+        "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest",
+        data,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${access_token}`,
+          },
+        }
+      );
     })
-    .catch((error) => {
-      console.error("Token retrieval error:", error);
+    .then((response) => {
+      console.log(response.data);
+      setTimeout(getPaymentConfirmation, 15000);
+    })
+    .catch(error => {
+      console.error("Error sending STK Push request:", error.response ? error.response.data : error.message);
     });
-}
+  const getPaymentConfirmation = async () => {
+    console.log("Called payment confirm after 15000")
+    axios
+      .get(`https://www.adinfinite.co.ke/paymentConfirmation/${body.AdID}`)
+      .then(async (response) => {
+        console.log(response.data)
+        if (response.data !== "Not Found") {
+          let plan, expiryDate;
 
-app.post("/stk", (req, res) => {
-  const phoneNumber = req.body.PhoneNumber;
-  const amount = req.body.Amount;
-  const adID = req.body.AdID;
-  const adName = req.body.AdName;
-  const userID = req.body.UserID;
-  const userName = req.body.UserName;
+          if (response.data.Amount === 2.0) {
+            plan = "Monthly";
+            expiryDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+          } else if (response.data.Amount === 1.0) {
+            plan = "Weekly";
+            expiryDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+          }
+          const updatedAdData = {
+            Paid: true,
+            Plan: plan,
+            ExpiryDate: expiryDate,
+          };
 
-  getToken((token) => {
-    stkPush(token, phoneNumber, amount, adID, adName, userID, userName);
-console.log("successful")
-    res.send("Payment request initiated");
-  });
+          try {
+            await AdData.updateOne({ _id: req.body.AdID }, updatedAdData);
+            res.send({ Proceed: true });
+          } catch (error) {
+            console.error("getPayment", error);
+            res.send({ Proceed: false });
+          }
+        }else{
+          console.log("Not Found")
+        }
+      });
+  };
 });
-
-app.post(
-  "/getPayment/:phoneNumber/:adID/:adName/:userID/:userName",
-  async (req, res) => {
-    const adID = req.params.adID;
-    const adName = req.params.adName;
-    const userID = req.params.userID;
-    const userName = req.params.userName;
-    const phoneNumber = req.params.phoneNumber;
-
-    const result = req.body;
-    const resultCode = result.Body.stkCallback.ResultCode;
-    const resultDesc = result.Body.stkCallback.ResultDesc;
-
-    if (
-      resultCode === 0 &&
-      resultDesc === "The service request is processed successfully."
-    ) {
-      const callbackMetadata = result.Body.stkCallback.CallbackMetadata.Item;
-      const amountItem = callbackMetadata.find(
-        (item) => item.Name === "Amount"
-      );
-      const transactionDate = callbackMetadata.find(
-        (item) => item.Name === "TransactionDate"
-      );
-      const mpesaReceiptNumber = callbackMetadata.find(
-        (item) => item.Name === "MpesaReceiptNumber"
-      );
-      const paidAmount = parseFloat(amountItem.Value);
-
-      let plan, expiryDate;
-
-      if (paidAmount === 2000.0) {
-        plan = "Monthly";
-        expiryDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-      } else if (paidAmount === 700.0) {
-        plan = "Weekly";
-        expiryDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-      }
-      const updatedAdData = {
-        Paid: true,
-        Plan: plan,
-        ExpiryDate: expiryDate,
-      };
-
-      const subsData = {
-        AdID: adID,
-        UserID: userID,
-        UserName: userName,
-        AdName: adName,
-        TransactionDate: transactionDate.Value.toString(),
-        MpesaReceiptNumber: mpesaReceiptNumber.Value,
-        PhoneNumber: `254${phoneNumber}`,
-        Amount: paidAmount.toString(),
-        Plan: plan,
-      };
-      AdSubscriptions.create(subsData)
-        .then((res) => {})
-        .catch((error) => {
-          console.error("Fail", error);
-        });
-
-      try {
-        await AdData.updateOne({ _id: adID }, updatedAdData);
-        console.log({ Proceed: true });
-        res.send({ Proceed: true });
-      } catch (error) {
-        console.error("getPayment", error);
-        res.send({ Proceed: false });
-      }
-    } else {
-      console.error(
-        `Payment not successful. Result Code: ${resultCode}, Result Desc: ${resultDesc}`
-      );
-      res.send({ Proceed: false });
-    }
-  }
-);
 
 const PORT = process.env.PORT || 3000;
 

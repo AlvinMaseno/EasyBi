@@ -41,7 +41,7 @@ const Boost = () => {
     };
     //send stk push
     axios
-      .post(`http://loalhost:3000/stk`, data)
+      .post(`http://localhost:3000/stk`, data)
       .then(() => {
         document.body.style.overflow = "visible";
         navigate("/HomePage");
