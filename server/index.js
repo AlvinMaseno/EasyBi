@@ -12,6 +12,7 @@ const { v4: uuidv4 } = require("uuid");
 const keyFilename = "adinfinite-e53e2556555e.json";
 const AdData = require("./Models/AdDataModel");
 const ReportReviewData = require("./Models/ReviewReportModel");
+const AdSubscriptions = require("./Models/AdSubscriptionsModel");
 const Chat = require("./Models/Chat");
 const { default: axios } = require("axios");
 
@@ -238,9 +239,7 @@ app.post("/verify", async (req, res) => {
     const userNameInUse = await UserData.findOne({
       UserName: data.UserName,
     });
-    const contactInUse = await UserData.findOne({
-      Contact: data.Contact,
-    });
+
     if (emailInUse) {
       return res.send({
         message: `EMAIL ALREADY IN USE`,
@@ -253,12 +252,7 @@ app.post("/verify", async (req, res) => {
         proceed: false,
       });
     }
-    if (contactInUse) {
-      return res.send({
-        message: `CONTACT ALREADY IN USE`,
-        proceed: false,
-      });
-    }
+
     // Generate a random 5-digit verification code
     function generateVerificationCode() {
       return Math.floor(10000 + Math.random() * 90000);
@@ -766,27 +760,11 @@ app.put("/updateUserProfileChanges", async (req, res) => {
       }
     };
 
-    const contactInUse = async () => {
-      const result = await UserData.findOne({
-        Contact: data.Contact,
-      });
-      if (result) {
-        return {
-          message: `CONTACT ALREADY IN USE`,
-          proceed: false,
-        };
-      }
-    };
-
     const emailCheck =
       data.Defaults.EmailDefault !== data.Email ? await emailInUse() : null;
     const userNameCheck =
       data.Defaults.UserNameDefault !== data.UserName
         ? await userNameInUse()
-        : null;
-    const contactCheck =
-      data.Defaults.ContactDefault !== data.Contact
-        ? await contactInUse()
         : null;
 
     if (emailCheck) {
@@ -795,10 +773,6 @@ app.put("/updateUserProfileChanges", async (req, res) => {
 
     if (userNameCheck) {
       return res.send(userNameCheck);
-    }
-
-    if (contactCheck) {
-      return res.send(contactCheck);
     }
 
     try {
@@ -1104,16 +1078,23 @@ app.post("/stk", (req, res) => {
       console.log(body);
       const data = {
         BusinessShortCode: 174379,
-        Password: 'MTc0Mzc5YmZiMjc5ZjlhYTliZGJjZjE1OGU5N2RkNzFhNDY3Y2QyZTBjODkzMDU5YjEwZjc4ZTZiNzJhZGExZWQyYzkxOTIwMjQwNzAzMjA1MzMx',
-        Timestamp: '20240703205331',
-        TransactionType: 'CustomerPayBillOnline',
+        Password:
+          "MTc0Mzc5YmZiMjc5ZjlhYTliZGJjZjE1OGU5N2RkNzFhNDY3Y2QyZTBjODkzMDU5YjEwZjc4ZTZiNzJhZGExZWQyYzkxOTIwMjQwNzAzMjA1MzMx",
+        Timestamp: "20240703205331",
+        TransactionType: "CustomerPayBillOnline",
         Amount: 1,
         PartyA: `254${body.PhoneNumber}`,
         PartyB: 174379,
         PhoneNumber: `254${body.PhoneNumber}`,
-        CallBackURL: `https://www.adinfinite.co.ke/payment/${encodeURIComponent(body.PhoneNumber)}/${encodeURIComponent(body.AdID)}/${encodeURIComponent(body.AdName)}/${encodeURIComponent(body.UserID)}/${encodeURIComponent(body.UserName)}`,
-        AccountReference: 'EasyBi',
-        TransactionDesc: 'Payment of X'
+        CallBackURL: `https://www.adinfinite.co.ke/payment/${encodeURIComponent(
+          body.PhoneNumber
+        )}/${encodeURIComponent(body.AdID)}/${encodeURIComponent(
+          body.AdName
+        )}/${encodeURIComponent(body.UserID)}/${encodeURIComponent(
+          body.UserName
+        )}`,
+        AccountReference: "EasyBi",
+        TransactionDesc: "Payment of X",
       };
       console.log(data);
 
@@ -1132,15 +1113,18 @@ app.post("/stk", (req, res) => {
       console.log(response.data);
       setTimeout(getPaymentConfirmation, 15000);
     })
-    .catch(error => {
-      console.error("Error sending STK Push request:", error.response ? error.response.data : error.message);
+    .catch((error) => {
+      console.error(
+        "Error sending STK Push request:",
+        error.response ? error.response.data : error.message
+      );
     });
   const getPaymentConfirmation = async () => {
-    console.log("Called payment confirm after 15000")
+    console.log("Called payment confirm after 15000");
     axios
       .get(`https://www.adinfinite.co.ke/paymentConfirmation/${body.AdID}`)
       .then(async (response) => {
-        console.log(response.data)
+        console.log(response.data);
         if (response.data !== "Not Found") {
           let plan, expiryDate;
 
@@ -1151,6 +1135,25 @@ app.post("/stk", (req, res) => {
             plan = "Weekly";
             expiryDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
           }
+
+          const subsData = {
+            AdID: response.data.AdID,
+            UserID: response.data.UserID,
+            UserName: response.data.UserName,
+            AdName: response.data.AdName,
+            TransactionDate: response.data.TransactionDate,
+            MpesaReceiptNumber: response.data.MpesaReceiptNumber,
+            PhoneNumber: response.data.PhoneNumber,
+            Amount: response.data.Amount,
+            Plan: plan,
+          };
+
+          AdSubscriptions.create(subsData)
+            .then(() => {})
+            .catch((error) => {
+              console.error("Fail", error);
+            });
+
           const updatedAdData = {
             Paid: true,
             Plan: plan,
@@ -1164,12 +1167,38 @@ app.post("/stk", (req, res) => {
             console.error("getPayment", error);
             res.send({ Proceed: false });
           }
-        }else{
-          console.log("Not Found")
+        } else {
+          console.log("Not Found");
         }
       });
   };
 });
+
+const checkSubscriptions = async () => {
+  const currentDate = new Date();
+
+  try {
+    const result = await AdData.updateMany(
+      {
+        ExpiryDate: { $lt: currentDate }, // Use $lt instead of { lt: currentDate }
+        Paid: true,
+      },
+      {
+        $set: { Plan: "", Paid: false, ExpiryDate: null },
+      }
+    );
+  } catch (error) {
+    console.error("Error in subscription check:", error);
+  }
+};
+
+// Call the function immediately
+checkSubscriptions();
+
+// Schedule the function to run every 24 hours
+const twentyFourHours = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+
+setInterval(checkSubscriptions, twentyFourHours);
 
 const PORT = process.env.PORT || 3000;
 

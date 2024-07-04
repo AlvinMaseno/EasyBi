@@ -11,7 +11,6 @@ const SignUp = () => {
   const [name, setName] = useState("");
   const [userName, setUserName] = useState("");
   const [email, setEmail] = useState("");
-  const [contact, setContact] = useState("");
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [currentDate, setCurrentDate] = useState("");
@@ -19,7 +18,6 @@ const SignUp = () => {
   const [nameValid, setNameValid] = useState(false);
   const [userNameValid, setUserNameValid] = useState(false);
   const [passwordValid, setPasswordValid] = useState(false);
-  const [contactValid, setContactValid] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [showpassword, setShowPassword] = useState(false);
   const eye = require("../assets/eye.png");
@@ -38,14 +36,12 @@ const SignUp = () => {
   const PWD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9]).{6,24}$/;
   const USERNAME_REGEX = /^[a-zA-Z ].{1,24}$/;
   const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  const CONTACT_REGEX = /^\+[0-9]{10,15}$/;
 
   // STYLING FOR INVADILITY
   const [nameColor, setNameColor] = useState("#ddd");
   const [userNameColor, setUserNameColor] = useState("#ddd");
   const [emailColor, setEmailColor] = useState("#ddd");
   const [passwordColor, setPasswordColor] = useState("#ddd");
-  const [contactColor, setContactColor] = useState("#ddd");
 
   const emailChanged = (text) => {
     setEmail(text);
@@ -65,13 +61,7 @@ const SignUp = () => {
     setNameColor(NAME_REGEX.test(text) || name === "" ? "#ddd" : "red");
   };
 
-  const contactChanged = (text) => {
-    setContact(text);
-    setContactValid(CONTACT_REGEX.test(text));
-    setContactColor(
-      CONTACT_REGEX.test(text) || contact === "" ? "#ddd" : "red"
-    );
-  };
+  
 
   const userNameChanged = (text) => {
     setUserName(text);
@@ -91,7 +81,6 @@ const SignUp = () => {
       emailValid &&
       passwordValid &&
       userNameValid &&
-      contactValid &&
       uploading === false
     ) {
       
@@ -111,7 +100,6 @@ const SignUp = () => {
         Password: removeTrailingWhitespace(password),
         DateCreated: currentDate,
         UserImageUrl: "",
-        Contact: removeTrailingWhitespace(contact),
       };
       const expirationDate = new Date();
       expirationDate.setDate(expirationDate.getDate() + 7); // Handle form submission, e.g., send data to the server
@@ -244,33 +232,7 @@ const SignUp = () => {
                 }}
               />
             </label>
-            <label
-              className="border text-xs rounded pb-2 px-4"
-              style={{ borderColor: contactColor }}
-            >
-              <input
-                type="phone"
-                required
-                value={contact}
-                className=" w-full placeholder:text-xs pl-5 py-4 active:bg-transparent focus:outline-none active:bg-white"
-                placeholder="Contact"
-                onChange={(e) => {
-                  contactChanged(e.target.value);
-                }}
-                onBlur={() => {
-                  contactChanged(contact);
-                }}
-              />
-            </label>
-            {contactColor === "red" ? (
-              <div className=" my-1 flex justify-center items-center">
-                <div className="text-xs text-red-500">
-                  Contact should be in this format +254XXXXXXX
-                </div>
-              </div>
-            ) : (
-              <></>
-            )}
+           
 
             <label
               className="border text-xs rounded pb-2 px-4 pt-2 flex flex-row content-center items-center justify-between"

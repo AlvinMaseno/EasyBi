@@ -12,7 +12,6 @@ import Header from "../Components/Header";
 function ProfileScreen() {
   const [name, setName] = useState();
   const [userName, setUserName] = useState();
-  const [contact, setContact] = useState("");
   const [email, setEmail] = useState();
   const [userID, setUserID] = useState();
   const [image, setImage] = useState();
@@ -24,7 +23,6 @@ function ProfileScreen() {
   const [errorMessage, setErrorMessage] = useState();
   const [nameDefault, setNameDefault] = useState();
   const [userNameDefault, setUserNameDefault] = useState();
-  const [contactDefault, setContactDefault] = useState("");
   const [emailDefault, setEmailDefault] = useState();
   const [largeScreen, setLargeScreen] = useState(false);
   const [deleteAccountMenu, setDeleteAccountMenu] = useState();
@@ -33,14 +31,11 @@ function ProfileScreen() {
   const NAME_REGEX = /^[a-zA-Z ].{1,24}$/;
   const USERNAME_REGEX = /^[a-zA-Z ].{1,24}$/;
   const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  const CONTACT_REGEX = /^\+[0-9]{10,15}$/;
 
   // STYLING FOR INVADILITY
   const [nameColor, setNameColor] = useState("#ddd");
   const [userNameColor, setUserNameColor] = useState("#ddd");
   const [emailColor, setEmailColor] = useState("#ddd");
-  const [contactColor, setContactColor] = useState("#ddd");
-  const [bannerTextContact, setBannerTextContact] = useState(false);
 
   const navigate = useNavigate();
 
@@ -61,15 +56,7 @@ function ProfileScreen() {
     setNameColor(NAME_REGEX.test(text) || name === "" ? "#ddd" : "red");
   };
 
-  const contactChanged = (text) => {
-    setContact(text);
-    setContactColor(
-      CONTACT_REGEX.test(text) || contact === "" ? "#ddd" : "red"
-    );
-    setBannerTextContact(
-      CONTACT_REGEX.test(text) || contact === "" ? false : true
-    );
-  };
+
 
   const userNameChanged = (text) => {
     setUserName(text);
@@ -95,10 +82,7 @@ function ProfileScreen() {
         setNameDefault(response.data.Name);
         setUserNameDefault(response.data.UserName);
         setEmailDefault(response.data.Email);
-        if (response.data.Contact) {
-          setContact(response.data.Contact);
-          setContactDefault(response.data.Contact);
-        }
+      
         setTimeout(() => {
           setUploading(false);
         }, 3000);
@@ -202,8 +186,7 @@ function ProfileScreen() {
     if (
       USERNAME_REGEX.test(userName) &&
       EMAIL_REGEX.test(email) &&
-      NAME_REGEX.test(name) &&
-      (CONTACT_REGEX.test(contact) || contact === "")
+      NAME_REGEX.test(name) 
     ) {
       if (
         (imagePickedUri !== "" || imagePickedUri == "Delete Image") &&
@@ -220,11 +203,9 @@ function ProfileScreen() {
             Name: name,
             Email: email,
             UserName: userName,
-            Contact: contact,
             Defaults: {
               NameDefault: nameDefault,
               EmailDefault: emailDefault,
-              ContactDefault: contactDefault,
               UserNameDefault: userNameDefault,
             },
           })
@@ -251,11 +232,9 @@ function ProfileScreen() {
             Name: name,
             Email: email,
             UserName: userName,
-            Contact: contact,
             Defaults: {
               NameDefault: nameDefault,
               EmailDefault: emailDefault,
-              ContactDefault: contactDefault,
               UserNameDefault: userNameDefault,
             },
           })
@@ -601,31 +580,7 @@ function ProfileScreen() {
                     }}
                   />
                 </label>
-                <label
-                  className="border my-2 text-xs rounded pb-2 px-4"
-                  style={{ borderColor: contactColor }}
-                >
-                  <input
-                    type="phone"
-                    value={contact}
-                    required
-                    className=" w-full placeholder:text-xs pl-5 py-4 active:bg-transparent focus:outline-none active:bg-white"
-                    placeholder="Contact"
-                    onChange={(e) => {
-                      contactChanged(e.target.value);
-                    }}
-                    onBlur={() => {
-                      contactChanged(contact);
-                    }}
-                  />
-                </label>
-                {bannerTextContact ? (
-                  <div className="text-xs text-center text-red-500">
-                    Contact format is +254...{" "}
-                  </div>
-                ) : (
-                  <></>
-                )}
+                
               </div>
               <div className="flex flex-col w-full justify-between items-center flex-1">
                 <div

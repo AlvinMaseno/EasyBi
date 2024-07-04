@@ -6,7 +6,6 @@ var UserSchema = mongoose.Schema({
   Email: String,
   HashedPassword: String,
   UserImageUrl: String,
-  Contact: String,
   DateCreated: Date,
   Enabled: Boolean,
   LastKnownCoordinates: { latitude: String, longitude: String },

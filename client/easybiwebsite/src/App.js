@@ -12,22 +12,24 @@ import React, { useState, createContext } from "react";
 import ProfilePage from "./pages/ProfilePage";
 import Verify from "./pages/Verify";
 import VerifyPassword from "./pages/VerifyPassword";
-import ResetPassword from "./pages/ResetPassword"
+import ResetPassword from "./pages/ResetPassword";
 import Boost from "./pages/Boost";
-
+import Analytics from "./pages/Analytics";
 
 import "../src/pagescss/slideanimation.css";
 import LandingPage from "./pages/LandingPage";
 
 function App() {
   const [coordinateData, setCoordinateData] = useState(); //used by AdContext to pass the data about the ad
+  const [messageInfo, setMessageInfo] = useState();
 
   return (
-    <CoordinateContext.Provider value={{ coordinateData, setCoordinateData }}>
+    <MessageContext.Provider value={{ messageInfo, setMessageInfo }}>
+      <CoordinateContext.Provider value={{ coordinateData, setCoordinateData }}>
         <CookiesProvider>
           <BrowserRouter>
             <div style={{ fontFamily: "MyFont" }}>
-            <Routes>
+              <Routes>
                 <Route path="/" exact element={<LandingPage />} />
                 <Route path="/HomePage" exact element={<Homepage />} />
                 <Route path="/SearchPage" exact element={<SearchPage />} />
@@ -40,14 +42,24 @@ function App() {
                 <Route path="/LandingPage" exact element={<LandingPage />} />
                 <Route path="/AdScreen/:id" exact element={<AdScreen />} />
                 <Route path="/Messages" exact element={<Messages />} />
-                <Route path="/VerifyPassword" exact element={<VerifyPassword />} />
-                <Route path="/ResetPassword" exact element={<ResetPassword />} />
+                <Route
+                  path="/VerifyPassword"
+                  exact
+                  element={<VerifyPassword />}
+                />
+                <Route
+                  path="/ResetPassword"
+                  exact
+                  element={<ResetPassword />}
+                />
                 <Route path="/Boost" exact element={<Boost />} />
+                <Route path="/Analytics" exact element={<Analytics />} />
               </Routes>
             </div>
           </BrowserRouter>
         </CookiesProvider>
-    </CoordinateContext.Provider>
+      </CoordinateContext.Provider>
+    </MessageContext.Provider>
   );
 }
 
