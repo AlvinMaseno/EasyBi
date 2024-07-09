@@ -15,6 +15,7 @@ const ReportReviewData = require("./Models/ReviewReportModel");
 const AdSubscriptions = require("./Models/AdSubscriptionsModel");
 const Chat = require("./Models/Chat");
 const { default: axios } = require("axios");
+const secretKey = process.env.STK_SECRETE_KEY
 
 require("dotenv").config;
 
@@ -1051,132 +1052,125 @@ app.put("/updateChats", async (req, res) => {
   }
 });
 
-app.post("/stk", (req, res) => {
-  const body = req.body;
-  const consumer_key = "jRxXIxCyke1AuauGIl6LuUDiZME6cgcMDdJNt3emPCuJBnMy";
-  const consumer_secret =
-    "ulBOwP6aeWmT8FLxfSKGbVAKZKbikSMG7uMmNLUzK1ttR434YkaUPDeEdGsoBGw0";
+app.post("/stk", async (req, res) => {
+  const details=req.body
 
-  const encodedCredentials = Buffer.from(
-    `${consumer_key}:${consumer_secret}`
-  ).toString("base64");
+  const secretKey = process.env.STK_SECRETE_KEY;
+  let reference;
 
-  let access_token;
+  const metadata = {
+    PhoneNumber: details.PhoneNumber,
+    Amount: details.Amount,
+    AdID: details.AdID,
+    UserName: details.UserName,
+    AdName:details.AdName,
+    UserID: details.UserID
+  };
+
+  const data = {
+    amount: 200,
+    email: "customer@email.com",
+    currency: "KES",
+    mobile_money: {
+      phone: `+254${details.PhoneNumber}`,
+      provider: "mpesa",
+    },
+    metadata: metadata,
+  };
+
+  const config = {
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${secretKey}`,
+    },
+  };
 
   axios
-    .get(
-      "https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials",
-      {
-        headers: {
-          Authorization: `Basic ${encodedCredentials}`,
-        },
-      }
-    )
+    .post("https://api.paystack.co/charge", data, config)
     .then((response) => {
-      access_token = response.data.access_token;
-      console.log(access_token);
-      console.log(body);
-      const data = {
-        BusinessShortCode: 174379,
-        Password:
-          "MTc0Mzc5YmZiMjc5ZjlhYTliZGJjZjE1OGU5N2RkNzFhNDY3Y2QyZTBjODkzMDU5YjEwZjc4ZTZiNzJhZGExZWQyYzkxOTIwMjQwNzAzMjA1MzMx",
-        Timestamp: "20240703205331",
-        TransactionType: "CustomerPayBillOnline",
-        Amount: 1,
-        PartyA: `254${body.PhoneNumber}`,
-        PartyB: 174379,
-        PhoneNumber: `254${body.PhoneNumber}`,
-        CallBackURL: `https://www.adinfinite.co.ke/payment/${encodeURIComponent(
-          body.PhoneNumber
-        )}/${encodeURIComponent(body.AdID)}/${encodeURIComponent(
-          body.AdName
-        )}/${encodeURIComponent(body.UserID)}/${encodeURIComponent(
-          body.UserName
-        )}`,
-        AccountReference: "EasyBi",
-        TransactionDesc: "Payment of X",
-      };
-      console.log(data);
+      reference = response.data.data.reference; // Corrected path to reference
+      console.log(response.data)
+      setTimeout(verifyTransaction, 15000); // Delaying the verification to ensure transaction processing
+    })
+    .catch((error) => {
+      if (error.response) {
+        console.error("Error Response:", error.response.data);
+      } else {
+        console.error("Error Message:", error.message);
+      }
+    });
 
-      return axios.post(
-        "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest",
-        data,
+  async function verifyTransaction() {
+    console.log("verifying transaction");
+    try {
+      const response = await axios.get(
+        `https://api.paystack.co/transaction/verify/${reference}`,
         {
           headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${access_token}`,
+            Authorization: `Bearer ${secretKey}`,
           },
         }
       );
-    })
-    .then((response) => {
-      console.log(response.data);
-      setTimeout(getPaymentConfirmation, 15000);
-    })
-    .catch((error) => {
-      console.error(
-        "Error sending STK Push request:",
-        error.response ? error.response.data : error.message
-      );
-    });
-  const getPaymentConfirmation = async () => {
-    console.log("Called payment confirm after 15000");
-    axios
-      .get(`https://www.adinfinite.co.ke/paymentConfirmation/${body.AdID}`)
-      .then(async (response) => {
-        console.log(response.data);
-        if (response.data !== "Not Found") {
-          let plan, expiryDate;
 
-          if (response.data.Amount === 2.0) {
-            plan = "Monthly";
-            expiryDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-          } else if (response.data.Amount === 1.0) {
-            plan = "Weekly";
-            expiryDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-          }
+      if (response.data.status) {
+        const transactionData = response.data;
+        const resultObject = {
+          Amount: transactionData.data.amount,
+          PhoneNumber: transactionData.data.metadata.PhoneNumber,
+          MpesaReceiptNumber: transactionData.data.receipt_number,
+          TransactionDate: transactionData.data.transaction_date,
+          AdID: transactionData.data.metadata.AdID,
+          AdName: transactionData.data.metadata.AdName,
+          UserID: transactionData.data.metadata.UserID,
+          UserName: transactionData.data.metadata.UserName,
+        };
 
-          const subsData = {
-            AdID: response.data.AdID,
-            UserID: response.data.UserID,
-            UserName: response.data.UserName,
-            AdName: response.data.AdName,
-            TransactionDate: response.data.TransactionDate,
-            MpesaReceiptNumber: response.data.MpesaReceiptNumber,
-            PhoneNumber: response.data.PhoneNumber,
-            Amount: response.data.Amount,
-            Plan: plan,
-          };
+        let plan, expiryDate;
 
-          AdSubscriptions.create(subsData)
-            .then(() => {})
-            .catch((error) => {
-              console.error("Fail", error);
-            });
-
-          const updatedAdData = {
-            Paid: true,
-            Plan: plan,
-            ExpiryDate: expiryDate,
-          };
-
-          try {
-            await AdData.updateOne({ _id: req.body.AdID }, updatedAdData);
-            res.send({ Proceed: true });
-          } catch (error) {
-            console.error("getPayment", error);
-            res.send({ Proceed: false });
-          }
-        } else {
-          console.log("Not Found");
+        if (resultObject.Amount === 300) {
+          plan = "Monthly";
+          expiryDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+        } else if (resultObject.Amount === 200) {
+          plan = "Weekly";
+          expiryDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
         }
-      });
-  };
+
+        const subsData = {
+          AdID: resultObject.AdID,
+          UserID: resultObject.UserID,
+          UserName: resultObject.UserName,
+          AdName: resultObject.AdName,
+          TransactionDate: resultObject.TransactionDate,
+          MpesaReceiptNumber: resultObject.MpesaReceiptNumber,
+          PhoneNumber: resultObject.PhoneNumber,
+          Amount: resultObject.Amount,
+          Plan: plan,
+        };
+
+        await AdSubscriptions.create(subsData);
+
+        const updatedAdData = {
+          Paid: true,
+          Plan: plan,
+          ExpiryDate: expiryDate,
+        };
+
+
+        await AdData.updateOne({ _id: resultObject.AdID }, updatedAdData);
+        res.send({ Proceed: true });
+      }else{
+        console.log(response.data)
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  }
 });
 
 const checkSubscriptions = async () => {
   const currentDate = new Date();
-
+  return;
   try {
     const result = await AdData.updateMany(
       {
