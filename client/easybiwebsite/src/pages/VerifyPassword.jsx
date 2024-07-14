@@ -16,11 +16,7 @@ const VerifyPassword = () => {
 
   const section1 = useRef(null);
 
-  const scrollToDiv = (divTarget) => {
-    if (divTarget.current) {
-      divTarget.current.scrollIntoView({ behavior: "smooth" });
-    }
-  };
+
 
   const sendOTP = async () => {
     setUploading(true);

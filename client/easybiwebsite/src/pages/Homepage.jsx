@@ -8,7 +8,7 @@ import Header from "../Components/Header";
 
 function Homepage() {
   const [data, setData] = useState([]);
-  const [numbers, setNumbers] = useState(20); //stores the number of records to be retrieved
+  const numbers = 20; //stores the number of records to be retrieved
   const navigate = useNavigate();
   const crownImage = require("../assets/crown.png");
   const [largeScreen, setLargeScreen] = useState(false);
